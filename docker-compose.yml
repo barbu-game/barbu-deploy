@@ -1,0 +1,36 @@
+# Local full stack. Run from this folder with sibling repos checked out next to it:
+#   barbu-server/  barbu-web/  barbu-deploy/
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: barbu
+      POSTGRES_PASSWORD: barbu
+      POSTGRES_DB: barbu
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  server:
+    build:
+      context: ../barbu-server
+      dockerfile: app/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+
+  web:
+    build:
+      context: ../barbu-web
+      args:
+        NEXT_PUBLIC_WS_URL: ws://localhost:8080/ws/game
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
