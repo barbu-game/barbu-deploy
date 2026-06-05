@@ -19,6 +19,12 @@ services:
     build:
       context: ../barbu-server
       dockerfile: app/Dockerfile
+    environment:
+      JDBC_URL: jdbc:postgresql://postgres:5432/barbu
+      JDBC_DRIVER: org.postgresql.Driver
+      JDBC_USER: barbu
+      JDBC_PASSWORD: barbu
+      JWT_SECRET: change-me-in-production-this-must-be-at-least-256-bits-long-0123456789
     ports:
       - "8080:8080"
     depends_on:

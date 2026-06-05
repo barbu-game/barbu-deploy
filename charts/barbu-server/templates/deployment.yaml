@@ -21,6 +21,14 @@ spec:
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
+          env:
+            - name: JDBC_URL
+              value: {{ .Values.config.jdbcUrl | quote }}
+            - name: JDBC_DRIVER
+              value: {{ .Values.config.jdbcDriver | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.secretName }}
           readinessProbe:
             httpGet:
               path: /health

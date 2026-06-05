@@ -21,6 +21,13 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/affinity: cookie
 
+config:
+  jdbcUrl: jdbc:postgresql://barbu-postgres:5432/barbu
+  jdbcDriver: org.postgresql.Driver
+
+# A Secret (created out-of-band) must hold JDBC_USER, JDBC_PASSWORD, JWT_SECRET.
+secretName: barbu-server-secrets
+
 resources:
   requests:
     cpu: 100m
