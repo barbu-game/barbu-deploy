@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/REPLACE_ORG/barbu-deploy.git
+    repoURL: https://github.com/barbu-game/barbu-deploy.git
     targetRevision: main
     path: charts/barbu-web
   destination:

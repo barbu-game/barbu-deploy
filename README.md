@@ -20,9 +20,8 @@ docker compose up --build
 
 ## Cluster
 
-1. Build and push images to `ghcr.io/<org>/barbu-server` and `barbu-web`.
-2. Replace `REPLACE_ORG` in `argocd/` and `charts/*/values.yaml`.
-3. Apply the root app: `kubectl apply -f argocd/app-of-apps.yaml`.
+1. Build and push images to `ghcr.io/barbu-game/barbu-server` and `barbu-web`.
+2. Apply the root app: `kubectl apply -f argocd/app-of-apps.yaml`.
 
 ArgoCD reconciles the child Applications, which render the Helm charts into the
 `barbu` namespace. Image bumps are picked up by ArgoCD Image Updater (or a CI

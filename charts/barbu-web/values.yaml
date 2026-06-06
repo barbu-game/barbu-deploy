@@ -3,7 +3,7 @@
 replicaCount: 2
 
 image:
-  repository: ghcr.io/REPLACE_ORG/barbu-web
+  repository: ghcr.io/barbu-game/barbu-web
   tag: latest
   pullPolicy: IfNotPresent
 
