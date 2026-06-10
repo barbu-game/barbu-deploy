@@ -1,0 +1,18 @@
+cluster:
+  name: barbu-postgres
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:16
+  storageSize: 5Gi
+  storageClass: hcloud-volumes
+  database: barbu
+  owner: barbu
+  # Secret (kubernetes.io/basic-auth) with username/password for the app role.
+  appSecret: barbu-db-app
+
+backup:
+  enabled: true
+  schedule: "0 0 3 * * *"        # 03:00 UTC daily (6-field CNPG cron)
+  retentionPolicy: "30d"
+  destinationPath: s3://barbu-backups/barbu
+  endpointURL: https://nbg1.your-objectstorage.com
+  s3Secret: barbu-backup-s3      # keys: ACCESS_KEY_ID, ACCESS_SECRET_KEY

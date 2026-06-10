@@ -1,11 +1,13 @@
-# Stateless client — scales horizontally behind the ingress.
-# NEXT_PUBLIC_WS_URL is baked into the image at build time (build arg).
-replicaCount: 2
+# Stateless client. 1 replica on the constrained worker; scalable later.
+# NEXT_PUBLIC_WS_URL is baked into the image at build time (see Plan 2).
+replicaCount: 1
 
 image:
   repository: ghcr.io/barbu-game/barbu-web
-  tag: latest
+  tag: "0.1.0" # bumped per release by the GitOps commit
   pullPolicy: IfNotPresent
+
+imagePullSecret: ghcr-pull
 
 service:
   type: ClusterIP
@@ -13,8 +15,9 @@ service:
 
 ingress:
   enabled: true
-  className: nginx
-  host: barbu.example.com
+  className: traefik
+  host: barbu.kour0.com
+  certResolver: le
 
 resources:
   requests:

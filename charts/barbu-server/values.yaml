@@ -1,28 +1,28 @@
 # A game room lives in one pod's memory, so v1 runs a single replica and routes
-# every player of a table to it. Sharding (room directory in Redis) comes later.
+# every player of a table to it via Traefik sticky-cookie sessions.
 replicaCount: 1
 
 image:
   repository: ghcr.io/barbu-game/barbu-server
-  tag: latest
+  tag: "0.2.0" # published by P2 (feat: metrics → minor bump); bumped per release by GitOps
   pullPolicy: IfNotPresent
+
+imagePullSecret: ghcr-pull
 
 service:
   type: ClusterIP
   port: 8080
+  # Traefik sticky session so all players of a table reach the same pod.
+  stickyCookie: "barbu_srv"
 
 ingress:
   enabled: true
-  className: nginx
-  host: api.barbu.example.com
-  # WebSocket upgrade + sticky routing for long-lived game connections.
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/affinity: cookie
+  className: traefik
+  host: api.barbu.kour0.com
+  certResolver: le
 
 config:
-  jdbcUrl: jdbc:postgresql://barbu-postgres:5432/barbu
+  jdbcUrl: jdbc:postgresql://barbu-postgres-rw:5432/barbu
   jdbcDriver: org.postgresql.Driver
 
 # A Secret (created out-of-band) must hold JDBC_USER, JDBC_PASSWORD, JWT_SECRET.
@@ -31,7 +31,13 @@ secretName: barbu-server-secrets
 resources:
   requests:
     cpu: 100m
-    memory: 256Mi
+    memory: 512Mi
   limits:
     cpu: "1"
-    memory: 512Mi
+    memory: 768Mi
+
+metrics:
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    path: /prometheus

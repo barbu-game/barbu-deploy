@@ -1,0 +1,42 @@
+{{- if .Values.ingress.enabled }}
+# /prometheus must not be reachable from the internet. Legitimate scraping hits the
+# ClusterIP Service directly (never the ingress), so an external request through Traefik
+# carries a public source IP and is denied by this allow-list (loopback only).
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .Chart.Name }}-block-metrics
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  ipAllowList:
+    sourceRange:
+      - 127.0.0.1/32
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Chart.Name }}-metrics
+  labels:
+    app: {{ .Chart.Name }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.tls.certresolver: {{ .Values.ingress.certResolver }}
+    # Higher priority than the catch-all "/" router so /prometheus is matched here first.
+    traefik.ingress.kubernetes.io/router.priority: "100"
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Chart.Name }}-block-metrics@kubernetescrd
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /prometheus
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Chart.Name }}
+                port:
+                  number: {{ .Values.service.port }}
+{{- end }}

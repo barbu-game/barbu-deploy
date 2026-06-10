@@ -1,14 +1,16 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: barbu-server
+  name: barbu-db
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # after the operator CRDs exist
 spec:
   project: default
   source:
     repoURL: git@github.com:barbu-game/barbu-deploy.git
     targetRevision: main
-    path: charts/barbu-server
+    path: charts/barbu-db
   destination:
     server: https://kubernetes.default.svc
     namespace: barbu

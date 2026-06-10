@@ -4,6 +4,9 @@ metadata:
   name: {{ .Chart.Name }}
   labels:
     app: {{ .Chart.Name }}
+  annotations:
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ .Values.service.stickyCookie | quote }}
 spec:
   type: {{ .Values.service.type }}
   selector:
