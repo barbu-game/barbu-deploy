@@ -39,10 +39,37 @@ module "kube-hetzner" {
   # We use Traefik's own ACME, not cert-manager.
   enable_cert_manager = false
 
+  # Pin: kured ≥1.20 renamed its manifest asset to `-combined.yaml`, but module 2.18.0
+  # still fetches `kured-<v>-dockerhub.yaml`. 1.19.0 is the last release shipping that name.
+  kured_version = "1.19.0"
+
+  # Pin the chart: overriding traefik_values REPLACES the module's defaults wholesale, so the
+  # schema must match this exact version (40.x/Traefik v3.7 moved redirect+TLS under ports.*.http).
+  traefik_version = "40.2.0"
+
+  # Single-replica Traefik terminating TLS via its own ACME (Let's Encrypt). Recreate strategy
+  # so the RWO ACME volume isn't held by two pods during a rollout. publishedservice arg restored
+  # from the module default (lost when overriding) so Ingress status gets the real ingress IP.
   traefik_values = <<-EOT
+    deployment:
+      replicas: 1
+    updateStrategy:
+      type: Recreate
+    service:
+      type: LoadBalancer
+    # fsGroup so the kubelet chowns the CSI volume to Traefik's gid — otherwise the
+    # non-root process can't create /data/acme.json and the ACME resolver is skipped.
+    podSecurityContext:
+      fsGroup: 65532
+      fsGroupChangePolicy: OnRootMismatch
+      runAsGroup: 65532
+      runAsNonRoot: true
+      runAsUser: 65532
     persistence:
       enabled: true
-      size: 128Mi
+      storageClass: hcloud-volumes
+      size: 10Gi
+      path: /data
     certificatesResolvers:
       le:
         acme:
@@ -52,11 +79,19 @@ module "kube-hetzner" {
             entryPoint: web
     ports:
       web:
-        redirectTo:
-          port: websecure
+        http:
+          redirections:
+            entryPoint:
+              to: websecure
+              scheme: https
+              permanent: true
       websecure:
-        tls:
-          certResolver: le
+        http:
+          tls:
+            enabled: true
+            certResolver: le
+    additionalArguments:
+      - "--providers.kubernetesingress.ingressendpoint.publishedservice=traefik/traefik"
   EOT
 
   # Bootstrap ArgoCD after the cluster is up, then hand it the deploy key + app-of-apps.

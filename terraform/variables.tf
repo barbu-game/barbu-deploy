@@ -27,3 +27,20 @@ variable "argocd_repo_ssh_key" {
   type        = string
   sensitive   = true
 }
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token scoped to Zone:DNS:Edit on the kour0.com zone."
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_zone_id" {
+  description = "Zone ID of kour0.com (Cloudflare dashboard → Overview → API → Zone ID)."
+  type        = string
+}
+
+variable "app_domain" {
+  description = "Base host for the web app; api and grafana are derived as api.<this> and grafana.<this>."
+  type        = string
+  default     = "barbu.kour0.com"
+}

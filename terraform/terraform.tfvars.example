@@ -2,6 +2,8 @@ hcloud_token         = "<HETZNER_API_TOKEN>"
 ssh_public_key_path  = "~/.ssh/id_ed25519.pub"
 ssh_private_key_path = "~/.ssh/id_ed25519"
 acme_email           = ""
+cloudflare_api_token = "<CLOUDFLARE_TOKEN_zone_DNS_edit>"
+cloudflare_zone_id   = "<kour0.com zone id from Cloudflare Overview>"
 # Private part of a read-only deploy key registered on the barbu-deploy repo.
 # Paste the real value into terraform.tfvars at apply time; never commit it.
 argocd_repo_ssh_key = <<-KEY
