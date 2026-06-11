@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: barbu-discord
+spec:
+  route:
+    receiver: discord
+    groupBy: ["alertname"]
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+    routes:
+      - receiver: "null"
+        matchers:
+          - name: alertname
+            value: Watchdog
+            matchType: "="
+  receivers:
+    - name: "null"
+    - name: discord
+      discordConfigs:
+        - apiURL:
+            name: {{ .Values.alertmanager.discordSecret }}
+            key: url

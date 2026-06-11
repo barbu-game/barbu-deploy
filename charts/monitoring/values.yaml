@@ -4,3 +4,6 @@ postgres:
   appSecret: barbu-db-app   # owner creds, used by the init Job to grant
   roSecret: grafana-pg-ro   # holds GRAFANA_PG_RO_PASSWORD, created out-of-band
 namespace: monitoring
+
+alertmanager:
+  discordSecret: alertmanager-discord   # key 'url' = Discord webhook, created out-of-band

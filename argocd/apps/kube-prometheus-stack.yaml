@@ -33,23 +33,11 @@ spec:
             resources:
               requests: { cpu: 10m, memory: 64Mi }
               limits: { memory: 128Mi }
-            secrets:
-              - alertmanager-discord
-          config:
-            route:
-              receiver: discord
-              group_by: ["alertname"]
-              group_wait: 30s
-              group_interval: 5m
-              repeat_interval: 4h
-              routes:
-                - receiver: "null"
-                  matchers: ['alertname = "Watchdog"']
-            receivers:
-              - name: "null"
-              - name: discord
-                discord_configs:
-                  - webhook_url_file: /etc/alertmanager/secrets/alertmanager-discord/url
+            # Operator v0.77 can't validate discord webhook_url_file in a raw config,
+            # so the routing/receiver lives in an AlertmanagerConfig CR (barbu-monitoring
+            # chart) where the webhook URL is a secret keyref, kept out of git.
+            alertmanagerConfiguration:
+              name: barbu-discord
         grafana:
           adminPassword: ""
           admin:
