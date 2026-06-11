@@ -1,0 +1,41 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: barbu-alerts
+  labels:
+    release: kps
+spec:
+  groups:
+    - name: barbu.rules
+      rules:
+        - alert: BarbuServerDown
+          expr: up{service="barbu-server"} == 0
+          for: 2m
+          labels: { severity: critical }
+          annotations:
+            summary: "Serveur Barbu injoignable"
+            description: "La cible Prometheus barbu-server est down depuis 2 min."
+        - alert: BarbuServerHigh5xx
+          expr: |
+            sum(rate(http_server_requests_seconds_count{service="barbu-server",status=~"5.."}[5m]))
+            / clamp_min(sum(rate(http_server_requests_seconds_count{service="barbu-server"}[5m])), 0.001) > 0.05
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Taux de 5xx élevé (serveur Barbu)"
+            description: "Plus de 5% de réponses 5xx sur 10 min."
+        - alert: WorkerMemoryHigh
+          expr: |
+            (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "Mémoire du nœud > 90%"
+            description: "Le worker est sous pression mémoire depuis 10 min."
+        - alert: PostgresNotReady
+          expr: cnpg_pg_replication_in_recovery == 1 or absent(cnpg_collector_up{namespace="barbu"})
+          for: 5m
+          labels: { severity: critical }
+          annotations:
+            summary: "Postgres Barbu non sain"
+            description: "Le cluster CNPG barbu-postgres ne rapporte pas un état sain."

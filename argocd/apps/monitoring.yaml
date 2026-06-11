@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: barbu-monitoring
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2" # after db + kube-prometheus-stack CRDs
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:barbu-game/barbu-deploy.git
+    targetRevision: main
+    path: charts/monitoring
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: barbu
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,102 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 65.5.1
+    helm:
+      releaseName: kps
+      valuesObject:
+        # Tight footprint for the 8 GB worker.
+        prometheus:
+          prometheusSpec:
+            retention: 15d
+            resources:
+              requests: { cpu: 100m, memory: 700Mi }
+              limits: { memory: 1200Mi }
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: hcloud-volumes
+                  accessModes: ["ReadWriteOnce"]
+                  resources: { requests: { storage: 10Gi } }
+            # Discover ServiceMonitors/rules in any namespace (incl. barbu).
+            serviceMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+        alertmanager:
+          alertmanagerSpec:
+            resources:
+              requests: { cpu: 10m, memory: 64Mi }
+              limits: { memory: 128Mi }
+            secrets:
+              - alertmanager-discord
+          config:
+            route:
+              receiver: discord
+              group_by: ["alertname"]
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 4h
+              routes:
+                - receiver: "null"
+                  matchers: ['alertname = "Watchdog"']
+            receivers:
+              - name: "null"
+              - name: discord
+                discord_configs:
+                  - webhook_url_file: /etc/alertmanager/secrets/alertmanager-discord/url
+        grafana:
+          adminPassword: ""
+          admin:
+            existingSecret: grafana-admin
+            userKey: admin-user
+            passwordKey: admin-password
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              traefik.ingress.kubernetes.io/router.entrypoints: websecure
+              traefik.ingress.kubernetes.io/router.tls: "true"
+              traefik.ingress.kubernetes.io/router.tls.certresolver: le
+            hosts: ["grafana.barbu.kour0.com"]
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              searchNamespace: ALL
+          additionalDataSources:
+            - name: BarbuPostgres
+              type: postgres
+              access: proxy
+              url: barbu-postgres-rw.barbu.svc:5432
+              database: barbu
+              user: grafana_ro
+              jsonData:
+                sslmode: disable
+                postgresVersion: 1600
+              secureJsonData:
+                password: ${GRAFANA_PG_RO_PASSWORD}
+          envFromSecret: grafana-pg-ro
+        defaultRules:
+          create: true
+        kubeEtcd: { enabled: false }
+        kubeControllerManager: { enabled: false }
+        kubeScheduler: { enabled: false }
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

@@ -1,0 +1,42 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: grafana-pg-ro-init
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: init
+          image: ghcr.io/cloudnative-pg/postgresql:16
+          env:
+            - name: PGHOST
+              value: {{ .Values.postgres.host }}
+            - name: PGDATABASE
+              value: {{ .Values.postgres.database }}
+            - name: PGUSER
+              valueFrom: { secretKeyRef: { name: {{ .Values.postgres.appSecret }}, key: username } }
+            - name: PGPASSWORD
+              valueFrom: { secretKeyRef: { name: {{ .Values.postgres.appSecret }}, key: password } }
+            - name: RO_PASSWORD
+              valueFrom: { secretKeyRef: { name: {{ .Values.postgres.roSecret }}, key: GRAFANA_PG_RO_PASSWORD } }
+          command:
+            - /bin/sh
+            - -c
+            - |
+              psql -v ON_ERROR_STOP=1 <<SQL
+              DO \$\$ BEGIN
+                IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'grafana_ro') THEN
+                  CREATE ROLE grafana_ro LOGIN;
+                END IF;
+              END \$\$;
+              ALTER ROLE grafana_ro PASSWORD '${RO_PASSWORD}';
+              GRANT CONNECT ON DATABASE ${PGDATABASE} TO grafana_ro;
+              GRANT USAGE ON SCHEMA public TO grafana_ro;
+              GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana_ro;
+              ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO grafana_ro;
+              SQL
