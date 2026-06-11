@@ -99,7 +99,7 @@ module "kube-hetzner" {
     kubectl -n argocd rollout status deploy/argocd-repo-server --timeout=300s
     kubectl -n argocd create secret generic barbu-deploy-repo \
       --from-literal=type=git \
-      --from-literal=url=git@github.com:barbu-game/barbu-deploy.git \
+      --from-literal=url=ssh://git@ssh.github.com:443/barbu-game/barbu-deploy.git \
       --from-literal=sshPrivateKey="$ARGOCD_REPO_SSH_KEY" \
       --dry-run=client -o yaml | kubectl apply -f - \
       && kubectl -n argocd label secret barbu-deploy-repo argocd.argoproj.io/secret-type=repository --overwrite

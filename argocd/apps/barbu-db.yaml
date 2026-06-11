@@ -8,7 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: git@github.com:barbu-game/barbu-deploy.git
+    repoURL: ssh://git@ssh.github.com:443/barbu-game/barbu-deploy.git
     targetRevision: main
     path: charts/barbu-db
   destination:
