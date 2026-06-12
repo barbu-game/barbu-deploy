@@ -2,6 +2,9 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: barbu-discord
+  # Must live in the Alertmanager's namespace (the operator resolves a global
+  # alertmanagerConfiguration there), not the chart's default barbu destination.
+  namespace: {{ .Values.namespace }}
 spec:
   route:
     receiver: discord
