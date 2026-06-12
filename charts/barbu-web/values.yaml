@@ -6,7 +6,7 @@ image:
   repository: ghcr.io/barbu-game/barbu-web
   # Web releases keep recomputing 0.1.0 (no git tags drive semantic-version), so the new
   # build is pinned by digest to force the pull — it carries NEXT_PUBLIC_API_URL + the new UI.
-  tag: "0.1.0@sha256:fc4a9765c18f4da80c5fb54aa2dc6dbeec9aa526bd7efdf8d4da4367c920c61d"
+  tag: "0.1.0@sha256:c67eae47532895a6d1e6d732c485b79446c168681414824bb3b3a690ff682dec"
   pullPolicy: IfNotPresent
 
 imagePullSecret: ghcr-pull
