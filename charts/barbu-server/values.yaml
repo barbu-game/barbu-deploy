@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/barbu-game/barbu-server
-  tag: "0.2.0" # published by P2 (feat: metrics → minor bump); bumped per release by GitOps
+  tag: "0.5.0" # montante ace-high + replay, chat, configurable CORS
   pullPolicy: IfNotPresent
 
 imagePullSecret: ghcr-pull
@@ -24,6 +24,8 @@ ingress:
 config:
   jdbcUrl: jdbc:postgresql://barbu-postgres-rw:5432/barbu
   jdbcDriver: org.postgresql.Driver
+  # Origin allowed to call the API from the browser (CORS). Must match the deployed web host.
+  corsAllowedOrigins: https://barbu.kour0.com
 
 # A Secret (created out-of-band) must hold JDBC_USER, JDBC_PASSWORD, JWT_SECRET.
 secretName: barbu-server-secrets
