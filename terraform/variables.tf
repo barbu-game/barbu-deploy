@@ -29,7 +29,7 @@ variable "argocd_repo_ssh_key" {
 }
 
 variable "cloudflare_api_token" {
-  description = "Cloudflare API token scoped to Zone:DNS:Edit on the kour0.com zone."
+  description = "Cloudflare API token: Zone:DNS:Edit on kour0.com + Account Cloudflare Tunnel:Edit + Access: Apps and Policies:Edit."
   type        = string
   sensitive   = true
 }
@@ -37,6 +37,17 @@ variable "cloudflare_api_token" {
 variable "cloudflare_zone_id" {
   description = "Zone ID of kour0.com (Cloudflare dashboard → Overview → API → Zone ID)."
   type        = string
+}
+
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID (dashboard Zero Trust, ou segment d'URL dash.cloudflare.com/<id>)."
+  type        = string
+}
+
+variable "admin_email" {
+  description = "Email autorisé par la politique Cloudflare Access sur Grafana et ArgoCD."
+  type        = string
+  default     = ""
 }
 
 variable "app_domain" {
