@@ -29,7 +29,7 @@ resource "cloudflare_dns_record" "admin" {
   for_each = toset(["grafana", "argocd"])
 
   zone_id = var.cloudflare_zone_id
-  name    = "${each.key}.${var.app_domain}"
+  name    = "${each.key}.${var.admin_domain}"
   type    = "CNAME"
   content = "${cloudflare_zero_trust_tunnel_cloudflared.barbu.id}.cfargotunnel.com"
   ttl     = 1 # automatic

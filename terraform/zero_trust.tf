@@ -35,12 +35,12 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "barbu" {
   config = {
     ingress = [
       {
-        hostname = "grafana.${var.app_domain}"
+        hostname = "grafana.${var.admin_domain}"
         service  = "http://kps-grafana.monitoring.svc.cluster.local:80"
       },
       {
         # argocd-server passe en --insecure → HTTP simple sur :80.
-        hostname = "argocd.${var.app_domain}"
+        hostname = "argocd.${var.admin_domain}"
         service  = "http://argocd-server.argocd.svc.cluster.local:80"
       },
       {
@@ -65,7 +65,7 @@ resource "cloudflare_zero_trust_access_policy" "admins" {
 resource "cloudflare_zero_trust_access_application" "grafana" {
   account_id       = var.cloudflare_account_id
   name             = "Barbu Grafana"
-  domain           = "grafana.${var.app_domain}"
+  domain           = "grafana.${var.admin_domain}"
   type             = "self_hosted"
   session_duration = "24h"
 
@@ -78,7 +78,7 @@ resource "cloudflare_zero_trust_access_application" "grafana" {
 resource "cloudflare_zero_trust_access_application" "argocd" {
   account_id       = var.cloudflare_account_id
   name             = "Barbu ArgoCD"
-  domain           = "argocd.${var.app_domain}"
+  domain           = "argocd.${var.admin_domain}"
   type             = "self_hosted"
   session_duration = "24h"
 

@@ -51,7 +51,13 @@ variable "admin_email" {
 }
 
 variable "app_domain" {
-  description = "Base host for the web app; api and grafana are derived as api.<this> and grafana.<this>."
+  description = "Base host for the web app; api is derived as api.<this>."
   type        = string
   default     = "barbu.kour0.com"
+}
+
+variable "admin_domain" {
+  description = "Base host for the admin UIs (grafana/argocd). 1er niveau pour rester couvert par l'Universal SSL gratuit (*.kour0.com)."
+  type        = string
+  default     = "kour0.com"
 }
