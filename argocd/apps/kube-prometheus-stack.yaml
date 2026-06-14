@@ -47,14 +47,10 @@ spec:
           resources:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { memory: 256Mi }
+          # Plus d'ingress public : Grafana est servi via le Cloudflare Tunnel (cf. charts/cloudflared)
+          # et gardé par Cloudflare Access.
           ingress:
-            enabled: true
-            ingressClassName: traefik
-            annotations:
-              traefik.ingress.kubernetes.io/router.entrypoints: websecure
-              traefik.ingress.kubernetes.io/router.tls: "true"
-              traefik.ingress.kubernetes.io/router.tls.certresolver: le
-            hosts: ["grafana.barbu.kour0.com"]
+            enabled: false
           sidecar:
             dashboards:
               enabled: true
