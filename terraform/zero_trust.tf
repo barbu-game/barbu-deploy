@@ -27,3 +27,25 @@ output "tunnel_cname" {
   description = "Cible CNAME des hostnames d'admin proxied."
   value       = "${cloudflare_zero_trust_tunnel_cloudflared.barbu.id}.cfargotunnel.com"
 }
+
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "barbu" {
+  account_id = var.cloudflare_account_id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.barbu.id
+
+  config = {
+    ingress = [
+      {
+        hostname = "grafana.${var.app_domain}"
+        service  = "http://kps-grafana.monitoring.svc.cluster.local:80"
+      },
+      {
+        # argocd-server passe en --insecure → HTTP simple sur :80.
+        hostname = "argocd.${var.app_domain}"
+        service  = "http://argocd-server.argocd.svc.cluster.local:80"
+      },
+      {
+        service = "http_status:404"
+      },
+    ]
+  }
+}
