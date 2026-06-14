@@ -49,3 +49,41 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "barbu" {
     ]
   }
 }
+
+resource "cloudflare_zero_trust_access_policy" "admins" {
+  account_id = var.cloudflare_account_id
+  name       = "barbu-admins"
+  decision   = "allow"
+
+  include = [{
+    email = {
+      email = var.admin_email
+    }
+  }]
+}
+
+resource "cloudflare_zero_trust_access_application" "grafana" {
+  account_id       = var.cloudflare_account_id
+  name             = "Barbu Grafana"
+  domain           = "grafana.${var.app_domain}"
+  type             = "self_hosted"
+  session_duration = "24h"
+
+  policies = [{
+    id         = cloudflare_zero_trust_access_policy.admins.id
+    precedence = 1
+  }]
+}
+
+resource "cloudflare_zero_trust_access_application" "argocd" {
+  account_id       = var.cloudflare_account_id
+  name             = "Barbu ArgoCD"
+  domain           = "argocd.${var.app_domain}"
+  type             = "self_hosted"
+  session_duration = "24h"
+
+  policies = [{
+    id         = cloudflare_zero_trust_access_policy.admins.id
+    precedence = 1
+  }]
+}
