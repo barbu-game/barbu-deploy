@@ -36,6 +36,27 @@ module "kube-hetzner" {
   ingress_controller      = "traefik"
   enable_klipper_metal_lb = true
 
+  # The default firewall whitelists egress (53/80/123/443/icmp). cloudflared needs port
+  # 7844 outbound to reach the Cloudflare edge: UDP for QUIC, TCP as the http2 fallback.
+  extra_firewall_rules = [
+    {
+      description     = "cloudflared tunnel QUIC egress"
+      direction       = "out"
+      protocol        = "udp"
+      port            = "7844"
+      source_ips      = []
+      destination_ips = ["0.0.0.0/0", "::/0"]
+    },
+    {
+      description     = "cloudflared tunnel http2 egress"
+      direction       = "out"
+      protocol        = "tcp"
+      port            = "7844"
+      source_ips      = []
+      destination_ips = ["0.0.0.0/0", "::/0"]
+    },
+  ]
+
   # We use Traefik's own ACME, not cert-manager.
   enable_cert_manager = false
 
