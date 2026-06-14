@@ -1,0 +1,5 @@
+apiVersion: v2
+name: cloudflared
+description: Cloudflare Tunnel daemon fronting Grafana and ArgoCD via Zero Trust Access
+type: application
+version: 0.1.0
