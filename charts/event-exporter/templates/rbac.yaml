@@ -5,8 +5,11 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 ---
-# L'informer d'events est cluster-wide (le filtre namespace=barbu est appliqué au
-# routage, pas au watch), d'où un ClusterRole en lecture seule sur les events.
+# Lecture seule cluster-wide : l'informer d'events couvre tout le cluster et
+# enrichit chaque event en lisant l'objet impliqué (pod, deployment, CRD…) avant
+# le routage. Aucun moyen de scoper le watcher à un namespace, donc get/list/watch
+# sur */* est requis (cf. RBAC recommandé amont). Le feed Discord, lui, reste
+# filtré à namespace=barbu + kind=Pod au routage.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -14,11 +17,8 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 rules:
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["events.k8s.io"]
-    resources: ["events"]
+  - apiGroups: ["*"]
+    resources: ["*"]
     verbs: ["get", "list", "watch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
