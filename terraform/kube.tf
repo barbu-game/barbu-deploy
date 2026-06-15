@@ -115,20 +115,14 @@ module "kube-hetzner" {
       - "--providers.kubernetesingress.ingressendpoint.publishedservice=traefik/traefik"
   EOT
 
-  # Bootstrap ArgoCD after the cluster is up, then hand it the deploy key + app-of-apps.
+  # Bootstrap ArgoCD : on attend seulement le repo-server. Le secret du repo
+  # (barbu-deploy-repo) est créé hors-git (cf. docs/secrets-runbook.md) : il ne peut
+  # pas l'être ici car extra_kustomize_parameters n'alimente que le rendu templatefile
+  # des .tpl, jamais l'environnement shell — $ARGOCD_REPO_SSH_KEY y était donc toujours
+  # vide et réécrasait le secret en clé vide à chaque apply.
   extra_kustomize_deployment_commands = <<-EOT
     kubectl -n argocd rollout status deploy/argocd-repo-server --timeout=300s
-    kubectl -n argocd create secret generic barbu-deploy-repo \
-      --from-literal=type=git \
-      --from-literal=url=ssh://git@ssh.github.com:443/barbu-game/barbu-deploy.git \
-      --from-literal=sshPrivateKey="$ARGOCD_REPO_SSH_KEY" \
-      --dry-run=client -o yaml | kubectl apply -f - \
-      && kubectl -n argocd label secret barbu-deploy-repo argocd.argoproj.io/secret-type=repository --overwrite
   EOT
-
-  extra_kustomize_parameters = {
-    ARGOCD_REPO_SSH_KEY = var.argocd_repo_ssh_key
-  }
 }
 
 output "kubeconfig" {
