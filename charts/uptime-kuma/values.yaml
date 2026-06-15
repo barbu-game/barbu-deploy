@@ -3,7 +3,7 @@
 # le même volume RWO pendant un rollout.
 image:
   repository: louislam/uptime-kuma
-  tag: "1.23.16"
+  tag: "2.4.0"
   pullPolicy: IfNotPresent
 
 service:
