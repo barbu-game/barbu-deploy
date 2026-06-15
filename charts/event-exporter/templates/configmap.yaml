@@ -5,6 +5,12 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 data:
+  # Les {{ "{{" }} … {{ "}}" }} de la couche event-exporter (Go template + sprig) sont
+  # émis littéralement via `…` pour ne pas être interprétés par Helm ; seuls
+  # .Values.* relèvent de Helm. NB (tmpl.go) : seules les valeurs string sont
+  # templatées — un int/bool dans le layout devient null —, et Discord refuse une
+  # couleur en string (400). D'où l'absence de `color`, la sévérité passant par
+  # un emoji dans le titre.
   config.yaml: |
     logLevel: error
     logFormat: json
@@ -23,4 +29,9 @@ data:
           headers:
             Content-Type: "application/json"
           layout:
-            content: "[{{ .Values.target.namespace }}] {{ "{{" }} .Reason {{ "}}" }} — {{ "{{" }} .InvolvedObject.Kind {{ "}}" }}/{{ "{{" }} .InvolvedObject.Name {{ "}}" }}: {{ "{{" }} .Message {{ "}}" }}"
+            username: "Barbu · pods"
+            embeds:
+              - title: '{{ `{{ if eq .Type "Warning" }}⚠️{{ else }}🟢{{ end }} {{ .Reason }} · {{ .InvolvedObject.Name }}` }}'
+                description: '{{ `{{ .Message }}` }}'
+                footer:
+                  text: '{{ `{{ .InvolvedObject.Kind }} · namespace {{ .InvolvedObject.Namespace }}` }}'
