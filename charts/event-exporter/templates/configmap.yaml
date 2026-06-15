@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+data:
+  config.yaml: |
+    logLevel: error
+    logFormat: json
+    route:
+      routes:
+        - match:
+            - receiver: "discord"
+              namespace: {{ .Values.target.namespace | quote }}
+              kind: {{ .Values.target.kind | quote }}
+    receivers:
+      - name: "discord"
+        webhook:
+          # ${DISCORD_WEBHOOK_URL} est résolu à l'exécution depuis le secret (env),
+          # donc l'URL ne touche jamais git.
+          endpoint: "${DISCORD_WEBHOOK_URL}"
+          headers:
+            Content-Type: "application/json"
+          layout:
+            content: "[{{ .Values.target.namespace }}] {{ "{{" }} .Reason {{ "}}" }} — {{ "{{" }} .InvolvedObject.Kind {{ "}}" }}/{{ "{{" }} .InvolvedObject.Name {{ "}}" }}: {{ "{{" }} .Message {{ "}}" }}"

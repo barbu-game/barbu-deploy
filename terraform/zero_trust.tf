@@ -44,6 +44,10 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "barbu" {
         service  = "http://argocd-server.argocd.svc.cluster.local:80"
       },
       {
+        hostname = "uptime.${var.admin_domain}"
+        service  = "http://uptime-kuma.monitoring.svc.cluster.local:3001"
+      },
+      {
         service = "http_status:404"
       },
     ]
@@ -79,6 +83,19 @@ resource "cloudflare_zero_trust_access_application" "argocd" {
   account_id       = var.cloudflare_account_id
   name             = "Barbu ArgoCD"
   domain           = "argocd.${var.admin_domain}"
+  type             = "self_hosted"
+  session_duration = "24h"
+
+  policies = [{
+    id         = cloudflare_zero_trust_access_policy.admins.id
+    precedence = 1
+  }]
+}
+
+resource "cloudflare_zero_trust_access_application" "uptime" {
+  account_id       = var.cloudflare_account_id
+  name             = "Barbu Uptime Kuma"
+  domain           = "uptime.${var.admin_domain}"
   type             = "self_hosted"
   session_duration = "24h"
 

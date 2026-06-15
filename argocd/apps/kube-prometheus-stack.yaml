@@ -74,6 +74,9 @@ spec:
         kubeEtcd: { enabled: false }
         kubeControllerManager: { enabled: false }
         kubeScheduler: { enabled: false }
+        # k3s embarque kube-proxy et n'expose ses métriques que sur 127.0.0.1:10249,
+        # donc inscrapable : la cible disparaît et déclenche KubeProxyDown en boucle.
+        kubeProxy: { enabled: false }
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

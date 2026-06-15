@@ -26,7 +26,7 @@ resource "cloudflare_dns_record" "app" {
 # est sortant-seul, donc aucun port entrant exposé et les contraintes ACME/WebSocket
 # qui imposent le grey-cloud sur web/api ne s'appliquent pas ici (TLS terminé par Cloudflare).
 resource "cloudflare_dns_record" "admin" {
-  for_each = toset(["grafana", "argocd"])
+  for_each = toset(["grafana", "argocd", "uptime"])
 
   zone_id = var.cloudflare_zone_id
   name    = "${each.key}.${var.admin_domain}"
