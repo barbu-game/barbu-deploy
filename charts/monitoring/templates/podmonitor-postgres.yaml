@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: barbu-postgres
+  labels:
+    release: kps
+spec:
+  # Le PodMonitor vit dans le namespace monitoring mais cible les pods CNPG du
+  # namespace barbu ; sans ce scrape, cnpg_collector_up est absent et l'alerte
+  # PostgresNotReady tire en permanence.
+  namespaceSelector:
+    matchNames: [barbu]
+  selector:
+    matchLabels:
+      cnpg.io/cluster: barbu-postgres
+  podMetricsEndpoints:
+    - port: metrics
