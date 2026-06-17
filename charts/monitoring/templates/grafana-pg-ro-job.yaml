@@ -22,8 +22,9 @@ spec:
               valueFrom: { secretKeyRef: { name: {{ .Values.postgres.appSecret }}, key: username } }
             - name: PGPASSWORD
               valueFrom: { secretKeyRef: { name: {{ .Values.postgres.appSecret }}, key: password } }
-            - name: RO_PASSWORD
-              valueFrom: { secretKeyRef: { name: {{ .Values.postgres.roSecret }}, key: GRAFANA_PG_RO_PASSWORD } }
+          # The role and its password are owned by CNPG (see barbu-db managed.roles);
+          # this hook only applies the object grants, which the database owner is
+          # allowed to do without ALTER-ing another role under PostgreSQL 16.
           command:
             - /bin/sh
             - -c
@@ -34,7 +35,6 @@ spec:
                   CREATE ROLE grafana_ro LOGIN;
                 END IF;
               END \$\$;
-              ALTER ROLE grafana_ro PASSWORD '${RO_PASSWORD}';
               GRANT CONNECT ON DATABASE ${PGDATABASE} TO grafana_ro;
               GRANT USAGE ON SCHEMA public TO grafana_ro;
               GRANT SELECT ON ALL TABLES IN SCHEMA public TO grafana_ro;

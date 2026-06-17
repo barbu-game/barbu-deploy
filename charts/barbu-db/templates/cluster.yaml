@@ -14,9 +14,9 @@ spec:
       owner: {{ .Values.cluster.owner }}
       secret:
         name: {{ .Values.cluster.appSecret }}
-  # Grant the app owner CREATEROLE so the grafana-pg-ro PostSync job can mint the
-  # read-only role. passwordSecret reuses the secret CNPG already holds for the owner,
-  # so reconciliation keeps the app credentials unchanged.
+  # Grant the app owner CREATEROLE so the grafana-pg-ro PostSync job can create the
+  # read-only role and its SELECT grants. passwordSecret reuses the secret CNPG
+  # already holds for the owner, so reconciliation keeps the app credentials unchanged.
   managed:
     roles:
       - name: {{ .Values.cluster.owner }}
@@ -25,6 +25,15 @@ spec:
         createrole: true
         passwordSecret:
           name: {{ .Values.cluster.appSecret }}
+      # CNPG (superuser) owns grafana_ro's password. PostgreSQL 16 hardened
+      # CREATEROLE: a non-admin role can no longer ALTER another role's password,
+      # so the app owner can't set it from the PostSync job — letting CNPG manage
+      # it keeps the read-only login working across fresh installs and restores.
+      - name: grafana_ro
+        ensure: present
+        login: true
+        passwordSecret:
+          name: {{ .Values.cluster.roSecret }}
   {{- if .Values.backup.enabled }}
   backup:
     retentionPolicy: {{ .Values.backup.retentionPolicy | quote }}

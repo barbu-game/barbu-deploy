@@ -8,6 +8,8 @@ cluster:
   owner: barbu
   # Secret (kubernetes.io/basic-auth) with username/password for the app role.
   appSecret: barbu-db-app
+  # Secret (key: password) whose value CNPG sets as the grafana_ro role password.
+  roSecret: grafana-pg-ro
 
 backup:
   enabled: true

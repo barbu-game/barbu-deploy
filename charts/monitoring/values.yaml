@@ -2,7 +2,6 @@ postgres:
   host: barbu-postgres-rw.barbu.svc
   database: barbu
   appSecret: barbu-db-app   # owner creds, used by the init Job to grant
-  roSecret: grafana-pg-ro   # holds GRAFANA_PG_RO_PASSWORD, created out-of-band
 namespace: monitoring
 
 alertmanager:
