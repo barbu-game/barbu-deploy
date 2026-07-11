@@ -5,4 +5,4 @@ postgres:
 namespace: monitoring
 
 alertmanager:
-  discordSecret: alertmanager-discord   # key 'url' = Discord webhook, created out-of-band
+  discordSecret: alertmanager-discord   # key 'url' = Discord webhook (SealedSecret cluster-secrets/monitoring-alertmanager-discord)

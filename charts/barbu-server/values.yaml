@@ -27,7 +27,7 @@ config:
   # Origin allowed to call the API from the browser (CORS). Must match the deployed web host.
   corsAllowedOrigins: https://barbu.kour0.com
 
-# A Secret (created out-of-band) must hold JDBC_USER, JDBC_PASSWORD, JWT_SECRET.
+# A SealedSecret (cluster-secrets/barbu-barbu-server-secrets) holds JDBC_USER, JDBC_PASSWORD, JWT_SECRET.
 secretName: barbu-server-secrets
 
 resources:

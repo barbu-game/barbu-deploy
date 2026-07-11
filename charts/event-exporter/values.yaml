@@ -8,7 +8,7 @@ target:
   namespace: barbu
   kind: Pod
 
-# Secret hors-git (cf. docs/secrets-runbook.md), clé "url" = webhook Discord.
+# Secret scellé (SealedSecret templates/discord-sealedsecret.yaml), clé "url" = webhook Discord.
 # Injecté en env DISCORD_WEBHOOK_URL ; l'event-exporter substitue ${...} dans sa config.
 discordSecret: event-exporter-discord
 
