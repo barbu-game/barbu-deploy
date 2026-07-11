@@ -33,17 +33,31 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.secretName }}
+          # Startup can take ~15s (JVM + Flyway); gate the other probes behind it
+          # so a slow boot never trips liveness.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
           readinessProbe:
             httpGet:
               path: /health
               port: http
             initialDelaySeconds: 3
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # A live pod may stall /health briefly under WebSocket write back-pressure;
+          # tolerate ~2min of that before a restart instead of the 1s/3-strike default.
           livenessProbe:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 10
             periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
