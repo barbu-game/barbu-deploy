@@ -1,0 +1,28 @@
+{{- if .Values.autoscaling.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  scaleTargetRef:
+    kind: StatefulSet
+    name: {{ .Chart.Name }}
+  minReplicaCount: {{ .Values.autoscaling.minReplicas }}
+  maxReplicaCount: {{ .Values.autoscaling.maxReplicas }}
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          # Long window: a stateful game server must not shrink in reaction to noise.
+          stabilizationWindowSeconds: 300
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: {{ .Values.autoscaling.prometheusServerAddress }}
+        metricName: barbu_rooms_active
+        # Target: keep ~roomsPerPod tables per pod.
+        threshold: {{ .Values.autoscaling.roomsPerPod | quote }}
+        query: sum(barbu_rooms_active)
+{{- end }}

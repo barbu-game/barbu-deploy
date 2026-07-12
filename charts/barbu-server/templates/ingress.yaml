@@ -18,7 +18,8 @@ spec:
       http:
         paths:
           # Per-pod routes: a client redirected to its table's owning pod connects via /pod/<pod>.
-          {{- range $i := until (int .Values.replicaCount) }}
+          # Rendered for podRouting.maxCount (autoscaling upper bound), independent of the live replica count.
+          {{- range $i := until (int $.Values.podRouting.maxCount) }}
           - path: /pod/{{ $.Chart.Name }}-{{ $i }}
             pathType: Prefix
             backend:

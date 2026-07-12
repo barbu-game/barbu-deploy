@@ -1,9 +1,10 @@
 {{- /*
 One Service per StatefulSet ordinal, selecting the pod-name label the controller sets. These are
 the routing targets for the per-pod ingress paths (/pod/<pod>), so a client can reach the exact
-pod that owns its table.
+pod that owns its table. Rendered for podRouting.maxCount (the autoscaling upper bound), not the
+current replica count: an ordinal with no pod yet selects nothing, and a pod KEDA adds is already routed.
 */ -}}
-{{- range $i := until (int .Values.replicaCount) }}
+{{- range $i := until (int .Values.podRouting.maxCount) }}
 ---
 apiVersion: v1
 kind: Service

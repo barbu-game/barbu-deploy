@@ -12,6 +12,13 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: barbu
+  # KEDA owns the replica count; don't let ArgoCD revert the autoscaler on every sync.
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: barbu-server
+      jsonPointers:
+        - /spec/replicas
   syncPolicy:
     automated:
       prune: true

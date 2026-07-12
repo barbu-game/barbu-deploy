@@ -3,6 +3,11 @@
 # still pins the initial lobby/matchmaking flow.
 replicaCount: 3
 
+# Per-pod routing (Services + /pod/<pod> ingress paths) is rendered for maxCount pods — the upper
+# bound of KEDA autoscaling — not the current replica count, so a pod KEDA adds is already routable.
+podRouting:
+  maxCount: 8
+
 image:
   repository: ghcr.io/barbu-game/barbu-server
   tag: "0.24.0" # bumped by the release pipeline
@@ -45,3 +50,12 @@ metrics:
     enabled: true
     interval: 30s
     path: /prometheus
+
+# KEDA drives replicas from the business metric (rooms per pod). ArgoCD ignores /spec/replicas so it
+# does not fight the autoscaler.
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  roomsPerPod: "10"
+  prometheusServerAddress: http://kps-kube-prometheus-stack-prometheus.monitoring.svc:9090

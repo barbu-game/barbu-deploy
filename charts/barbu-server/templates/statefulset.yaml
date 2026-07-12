@@ -8,7 +8,11 @@ spec:
   # Stable pod identities (barbu-server-0..N) so a table's owning pod is addressable by name;
   # no volumeClaimTemplates — durable state lives in Redis + Postgres, not on the pod.
   serviceName: {{ .Chart.Name }}-headless
+  # Initial value only — KEDA is the authority on replicas; ArgoCD ignores /spec/replicas.
   replicas: {{ .Values.replicaCount }}
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: {{ .Chart.Name }}
@@ -19,6 +23,15 @@ spec:
     spec:
       imagePullSecrets:
         - name: {{ .Values.imagePullSecret }}
+      # Give the drain handler time: preStop lets Traefik see NotReady, then SIGTERM releases leases.
+      terminationGracePeriodSeconds: 40
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: {{ .Chart.Name }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -68,5 +81,11 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 6
+          lifecycle:
+            preStop:
+              exec:
+                # Let Traefik observe readiness=NotReady before shutdown (the shutdown handler then
+                # releases leases). The Debian JRE image provides /bin/sh.
+                command: ["/bin/sh", "-c", "sleep 5"]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
