@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: linkerd-certs
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # after cert-manager/trust-manager (-1/0), before control-plane (2)
+spec:
+  project: default
+  source:
+    repoURL: ssh://git@ssh.github.com:443/barbu-game/barbu-deploy.git
+    targetRevision: main
+    path: charts/linkerd-certs
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: linkerd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

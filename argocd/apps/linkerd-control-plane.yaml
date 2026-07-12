@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: linkerd-control-plane
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2" # after linkerd-certs (issuer secret + trust-roots ConfigMap)
+spec:
+  project: default
+  source:
+    repoURL: https://helm.linkerd.io/edge
+    chart: linkerd-control-plane
+    targetRevision: 2024.11.4
+    helm:
+      releaseName: linkerd-control-plane
+      valuesObject:
+        # Certs are managed by cert-manager (identity issuer, rotated) + trust-manager (trust roots
+        # ConfigMap). No manual bootstrap: externalCA tells Linkerd the trust roots are provided
+        # externally, and the issuer is read from the kubernetes.io/tls secret.
+        identity:
+          externalCA: true
+          issuer:
+            scheme: kubernetes.io/tls
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: linkerd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

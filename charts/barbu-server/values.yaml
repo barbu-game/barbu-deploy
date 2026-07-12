@@ -59,3 +59,10 @@ autoscaling:
   maxReplicas: 8
   roomsPerPod: "10"
   prometheusServerAddress: http://kps-kube-prometheus-stack-prometheus.monitoring.svc:9090
+
+# Micro-segmentation du namespace barbu (default-deny + allows explicites). linkerd=true ajoute les
+# allows du mesh pour que le default-deny ne casse pas mTLS (Phase 2, Task 4).
+networkPolicy:
+  enabled: true
+  ingressNamespace: kube-system
+  linkerd: true

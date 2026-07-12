@@ -25,3 +25,7 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    # Mesh the whole barbu namespace: pods get the Linkerd sidecar (mTLS pod-to-pod).
+    managedNamespaceMetadata:
+      annotations:
+        linkerd.io/inject: enabled

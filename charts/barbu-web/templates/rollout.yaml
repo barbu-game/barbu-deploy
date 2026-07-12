@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ .Chart.Name }}
   labels:
@@ -9,6 +9,16 @@ spec:
   selector:
     matchLabels:
       app: {{ .Chart.Name }}
+  strategy:
+    canary:
+      # Replica-weighted canary (no traffic router): shift the ReplicaSet mix in steps, pausing to
+      # observe between each. The web front is stateless, so this is safe and reversible.
+      steps:
+        - setWeight: 25
+        - pause: { duration: 60 }
+        - setWeight: 50
+        - pause: { duration: 60 }
+        - setWeight: 100
   template:
     metadata:
       labels:

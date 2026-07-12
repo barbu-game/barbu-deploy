@@ -1,0 +1,6 @@
+apiVersion: v2
+name: linkerd-certs
+description: cert-manager issuer chain + trust-manager bundle for Linkerd mTLS identity
+type: application
+version: 0.1.0
+appVersion: "1"

@@ -1,0 +1,59 @@
+# Self-signed bootstrap issuer → long-lived trust anchor (root CA) → CA issuer → rotating identity
+# issuer. cert-manager renews the identity issuer automatically (duration/renewBefore).
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: linkerd-selfsigned
+  namespace: linkerd
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: linkerd-trust-anchor
+  namespace: linkerd
+spec:
+  isCA: true
+  commonName: root.linkerd.cluster.local
+  secretName: linkerd-trust-anchor
+  duration: 87600h # 10 years — the root rarely rotates
+  renewBefore: 8760h
+  issuerRef:
+    name: linkerd-selfsigned
+    kind: Issuer
+  privateKey:
+    algorithm: ECDSA
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: linkerd-trust-anchor
+  namespace: linkerd
+spec:
+  ca:
+    secretName: linkerd-trust-anchor
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: linkerd-identity-issuer
+  namespace: linkerd
+spec:
+  isCA: true
+  commonName: identity.linkerd.cluster.local
+  dnsNames:
+    - identity.linkerd.cluster.local
+  secretName: linkerd-identity-issuer
+  duration: 48h # short-lived, rotated by cert-manager
+  renewBefore: 25h
+  issuerRef:
+    name: linkerd-trust-anchor
+    kind: Issuer
+  privateKey:
+    algorithm: ECDSA
+  usages:
+    - cert sign
+    - crl sign
+    - server auth
+    - client auth
