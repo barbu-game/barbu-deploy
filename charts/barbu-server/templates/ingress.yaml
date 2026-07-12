@@ -9,12 +9,25 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.tls.certresolver: {{ .Values.ingress.certResolver }}
+    # Strip the /pod/<pod> prefix before the request reaches the pod (no-op on the "/" router).
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Chart.Name }}-strip-pod@kubernetescrd
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
     - host: {{ .Values.ingress.host }}
       http:
         paths:
+          # Per-pod routes: a client redirected to its table's owning pod connects via /pod/<pod>.
+          {{- range $i := until (int .Values.replicaCount) }}
+          - path: /pod/{{ $.Chart.Name }}-{{ $i }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Chart.Name }}-{{ $i }}
+                port:
+                  number: {{ $.Values.service.port }}
+          {{- end }}
+          # Default: lobby, matchmaking and initial connect land on the sticky Service.
           - path: /
             pathType: Prefix
             backend:

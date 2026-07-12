@@ -1,0 +1,11 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ .Chart.Name }}-strip-pod
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  # Strips the /pod/<pod> routing prefix so the backend pod sees the original /ws/game path.
+  stripPrefixRegex:
+    regex:
+      - "/pod/[^/]+"

@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: barbu-redis
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1" # same wave as the db; the server connects to Redis lazily
+spec:
+  project: default
+  source:
+    repoURL: ssh://git@ssh.github.com:443/barbu-game/barbu-deploy.git
+    targetRevision: main
+    path: charts/barbu-redis
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: barbu
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,21 +1,14 @@
 # barbu-deploy
 
-Deployment artifacts for the Barbu stack (GitOps via ArgoCD).
+Deployment artifacts for the Barbu stack (GitOps via ArgoCD). Kubernetes is the only
+deployment target; local development runs each service from its own repo.
 
 ```
-charts/barbu-server   Helm chart — Micronaut game server (single replica, sticky WS routing)
+charts/barbu-server   Helm chart — Micronaut game server (StatefulSet, per-pod WS routing)
+charts/barbu-redis    Helm chart — Redis (room leases, snapshots, reconnect index)
 charts/barbu-web      Helm chart — Next.js client (stateless, scaled)
 argocd/app-of-apps    Root ArgoCD Application
-argocd/apps/*         Child Applications (server, web)
-docker-compose.yml    Local full stack (postgres + redis + server + web)
-```
-
-## Local
-
-```sh
-docker compose up --build
-# web:    http://localhost:3000
-# server: http://localhost:8080/health
+argocd/apps/*         Child Applications (server, redis, web, …)
 ```
 
 ## Cluster
@@ -27,6 +20,9 @@ ArgoCD reconciles the child Applications, which render the Helm charts into the
 `barbu` namespace. Image bumps are picked up by ArgoCD Image Updater (or a CI
 commit to the chart values).
 
-> The game server holds room state in memory, so it runs a single replica with
-> cookie-affinity ingress for now. Horizontal sharding (a Redis room directory
-> routing each table to a pod) is the next step.
+> Room state (ownership lease + game snapshot + reconnect index) is externalized to
+> Redis, so a table survives the loss or reschedule of its owning pod: a surviving pod
+> rehydrates it from the snapshot and clients reconnect. The server therefore runs
+> multi-replica as a StatefulSet; each table is reachable on its owning pod via the
+> `/pod/<pod>` ingress path, while the sticky-cookie Service still pins the initial
+> lobby/matchmaking flow.

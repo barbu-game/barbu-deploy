@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: barbu-redis
+  labels:
+    app: barbu-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: barbu-redis
+  template:
+    metadata:
+      labels:
+        app: barbu-redis
+    spec:
+      containers:
+        - name: redis
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: redis
+              containerPort: {{ .Values.service.port }}
+          # Ephemeral on purpose: durable game records live in Postgres (MatchRecorder). Redis holds
+          # live, reconstructible state (leases, snapshots of in-flight tables), so no PVC is needed.
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: redis
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: data
+          emptyDir: {}

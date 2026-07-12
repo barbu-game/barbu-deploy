@@ -1,10 +1,13 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ .Chart.Name }}
   labels:
     app: {{ .Chart.Name }}
 spec:
+  # Stable pod identities (barbu-server-0..N) so a table's owning pod is addressable by name;
+  # no volumeClaimTemplates — durable state lives in Redis + Postgres, not on the pod.
+  serviceName: {{ .Chart.Name }}-headless
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -24,6 +27,12 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
           env:
+            - name: POD_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: REDIS_URI
+              value: {{ .Values.config.redisUri | quote }}
             - name: JDBC_URL
               value: {{ .Values.config.jdbcUrl | quote }}
             - name: JDBC_DRIVER

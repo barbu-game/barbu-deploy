@@ -1,0 +1,22 @@
+{{- /*
+One Service per StatefulSet ordinal, selecting the pod-name label the controller sets. These are
+the routing targets for the per-pod ingress paths (/pod/<pod>), so a client can reach the exact
+pod that owns its table.
+*/ -}}
+{{- range $i := until (int .Values.replicaCount) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Chart.Name }}-{{ $i }}
+  labels:
+    app: {{ $.Chart.Name }}
+spec:
+  type: ClusterIP
+  selector:
+    statefulset.kubernetes.io/pod-name: {{ $.Chart.Name }}-{{ $i }}
+  ports:
+    - name: http
+      port: {{ $.Values.service.port }}
+      targetPort: http
+{{- end }}

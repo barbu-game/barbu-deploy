@@ -1,10 +1,11 @@
-# A game room lives in one pod's memory, so v1 runs a single replica and routes
-# every player of a table to it via Traefik sticky-cookie sessions.
-replicaCount: 1
+# Room state is externalized to Redis (lease + snapshot), so tables survive pod loss and the
+# server runs multi-replica. Tables are addressable per-pod via /pod/<pod>; the sticky cookie
+# still pins the initial lobby/matchmaking flow.
+replicaCount: 3
 
 image:
   repository: ghcr.io/barbu-game/barbu-server
-  tag: "0.23.0" # bumped by the release pipeline
+  tag: "0.24.0" # bumped by the release pipeline
   pullPolicy: IfNotPresent
 
 imagePullSecret: ghcr-pull
@@ -22,6 +23,7 @@ ingress:
   certResolver: le
 
 config:
+  redisUri: redis://barbu-redis:6379
   jdbcUrl: jdbc:postgresql://barbu-postgres-rw:5432/barbu
   jdbcDriver: org.postgresql.Driver
   # Origin allowed to call the API from the browser (CORS). Must match the deployed web host.
