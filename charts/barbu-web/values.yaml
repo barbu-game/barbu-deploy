@@ -4,7 +4,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/barbu-game/barbu-web
-  tag: "0.13.0" # bumped by the release pipeline
+  tag: "0.15.0" # bumped by the release pipeline
   pullPolicy: IfNotPresent
 
 imagePullSecret: ghcr-pull
