@@ -8,6 +8,11 @@ metadata:
 spec:
   backoffLimit: 5
   template:
+    metadata:
+      annotations:
+        # One-shot Job: an injected linkerd-proxy never terminates, so the pod can never reach
+        # Completed and the Job fails on BackoffLimitExceeded. Opt out of the namespace-wide mesh.
+        linkerd.io/inject: disabled
     spec:
       restartPolicy: OnFailure
       containers:

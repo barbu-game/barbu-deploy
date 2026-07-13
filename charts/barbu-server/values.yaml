@@ -65,4 +65,5 @@ autoscaling:
 networkPolicy:
   enabled: true
   ingressNamespace: kube-system
+  monitoringNamespace: monitoring
   linkerd: true

@@ -4,6 +4,10 @@ metadata:
   name: barbu-redis
   labels:
     app: barbu-redis
+  annotations:
+    # Redis is unmeshed; meshed clients must treat 6379 as an opaque TCP stream rather than
+    # attempt protocol detection or mTLS against it.
+    config.linkerd.io/opaque-ports: "6379"
 spec:
   type: ClusterIP
   selector:

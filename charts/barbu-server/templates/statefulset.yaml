@@ -20,6 +20,11 @@ spec:
     metadata:
       labels:
         app: {{ .Chart.Name }}
+      annotations:
+        # Redis and Postgres are unmeshed: keep the Linkerd sidecar out of the datastore path so
+        # its protocol detection can't break the raw TCP handshakes (Micronaut fails fast on boot
+        # otherwise — "Connection closed prematurely").
+        config.linkerd.io/skip-outbound-ports: "6379,5432"
     spec:
       imagePullSecrets:
         - name: {{ .Values.imagePullSecret }}

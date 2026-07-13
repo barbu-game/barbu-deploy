@@ -63,6 +63,27 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring-scrape
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  # default-deny (podSelector {}) also blocks Prometheus in the monitoring namespace from scraping
+  # any barbu pod — server metrics (8080) and the CNPG exporter (9187). Without this the targets
+  # show down and PostgresNotReady fires via absent(cnpg_collector_up) even while the DB is healthy.
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.monitoringNamespace }}
+      ports:
+        - port: 8080
+        - port: 9187
 {{- if .Values.networkPolicy.linkerd }}
 ---
 apiVersion: networking.k8s.io/v1
