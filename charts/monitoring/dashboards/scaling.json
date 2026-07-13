@@ -1,0 +1,34 @@
+{
+  "title": "Barbu — Scaling & self-healing",
+  "uid": "barbu-scaling",
+  "schemaVersion": 39,
+  "editable": false,
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries", "title": "Tables par pod",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [ { "expr": "sum by (pod) (barbu_rooms_active)", "legendFormat": "{{pod}}" } ]
+    },
+    {
+      "type": "timeseries", "title": "Réplicas barbu-server (KEDA)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [ { "expr": "kube_statefulset_replicas{statefulset=\"barbu-server\"}", "legendFormat": "replicas" } ]
+    },
+    {
+      "type": "timeseries", "title": "Réhydratations (taux 5m)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [ { "expr": "rate(barbu_rehydrations_total[5m])", "legendFormat": "rehydrations/s" } ]
+    },
+    {
+      "type": "stat", "title": "Réhydratations (total)",
+      "gridPos": { "h": 8, "w": 4, "x": 12, "y": 8 },
+      "targets": [ { "expr": "sum(barbu_rehydrations_total)", "legendFormat": "total" } ]
+    },
+    {
+      "type": "timeseries", "title": "Joueurs actifs",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+      "targets": [ { "expr": "barbu_players_active", "legendFormat": "players" } ]
+    }
+  ]
+}
