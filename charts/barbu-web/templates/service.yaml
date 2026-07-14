@@ -4,6 +4,10 @@ metadata:
   name: {{ .Chart.Name }}
   labels:
     app: {{ .Chart.Name }}
+  annotations:
+    # Route via the ClusterIP so the meshed Traefik proxy can mTLS to this meshed service (endpoint-IP
+    # routing is seen as "backend default.unknown" and refused).
+    traefik.ingress.kubernetes.io/service.nativelb: "true"
 spec:
   type: {{ .Values.service.type }}
   selector:

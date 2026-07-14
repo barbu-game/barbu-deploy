@@ -74,6 +74,12 @@ module "kube-hetzner" {
   traefik_values = <<-EOT
     deployment:
       replicas: 1
+      # Mesh Traefik so its egress to the meshed app pods is mTLS. skip-inbound-ports keeps the
+      # external listeners (web 8000 / websecure 8443 / dashboard-ping 8080 / metrics 9100) out of the
+      # proxy — they receive non-mTLS external traffic and must not be intercepted.
+      podAnnotations:
+        linkerd.io/inject: enabled
+        config.linkerd.io/skip-inbound-ports: "8000,8443,8080,9100"
     updateStrategy:
       type: Recreate
     service:

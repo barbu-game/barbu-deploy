@@ -64,7 +64,7 @@ autoscaling:
 # allows du mesh pour que le default-deny ne casse pas mTLS (Phase 2, Task 4).
 networkPolicy:
   enabled: true
-  ingressNamespace: kube-system
+  ingressNamespace: traefik
   monitoringNamespace: monitoring
   postgresOperatorNamespace: cnpg-system
   linkerd: true

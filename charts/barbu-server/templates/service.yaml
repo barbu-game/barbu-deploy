@@ -5,6 +5,10 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
   annotations:
+    # Route via the ClusterIP (not pod endpoints) so the meshed Traefik proxy can discover this as a
+    # meshed service and mTLS to it — endpoint-IP routing surfaces as "backend default.unknown" and
+    # the connection is refused. Per-pod room affinity is preserved via the /pod/<pod> paths.
+    traefik.ingress.kubernetes.io/service.nativelb: "true"
     traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
     traefik.ingress.kubernetes.io/service.sticky.cookie.name: {{ .Values.service.stickyCookie | quote }}
 spec:
