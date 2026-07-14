@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://helm.linkerd.io/edge
     chart: linkerd-crds
-    targetRevision: 2024.11.4
+    targetRevision: 2026.6.3
     helm:
       releaseName: linkerd-crds
   destination:

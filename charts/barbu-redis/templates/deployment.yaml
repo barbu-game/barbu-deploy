@@ -13,6 +13,11 @@ spec:
     metadata:
       labels:
         app: barbu-redis
+      annotations:
+        # Redis stays out of the mesh (clients reach it via the Service's opaque-ports). Pin this
+        # so a restart under namespace-wide injection can't silently give it a sidecar and break
+        # the raw TCP path again.
+        linkerd.io/inject: disabled
     spec:
       containers:
         - name: redis

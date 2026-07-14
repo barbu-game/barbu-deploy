@@ -5,6 +5,14 @@ metadata:
 spec:
   instances: {{ .Values.cluster.instances }}
   imageName: {{ .Values.cluster.imageName }}
+  # Propagated to CNPG-managed Services and Pods (metadata only, no rollout). opaque-ports lets a
+  # meshed client (barbu-server) treat barbu-postgres-rw:5432 as an opaque TCP stream instead of
+  # running Linkerd protocol detection on it; inject: disabled keeps Postgres itself out of the mesh
+  # so a restart under namespace-wide injection can't give it a sidecar.
+  inheritedMetadata:
+    annotations:
+      config.linkerd.io/opaque-ports: "5432"
+      linkerd.io/inject: disabled
   storage:
     size: {{ .Values.cluster.storageSize }}
     storageClass: {{ .Values.cluster.storageClass }}

@@ -66,4 +66,5 @@ networkPolicy:
   enabled: true
   ingressNamespace: kube-system
   monitoringNamespace: monitoring
+  postgresOperatorNamespace: cnpg-system
   linkerd: true

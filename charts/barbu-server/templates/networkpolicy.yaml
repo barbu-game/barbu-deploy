@@ -84,6 +84,54 @@ spec:
       ports:
         - port: 8080
         - port: 9187
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-redis-ingress
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  # default-deny-ingress also selects the datastores; allow-server-to-datastores only opened the
+  # egress side. Open Redis 6379 to in-namespace clients (barbu-server) so the connection isn't
+  # dropped at the Redis ingress (the failure looks like a Linkerd "Connection closed prematurely").
+  podSelector:
+    matchLabels:
+      app: barbu-redis
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+      ports:
+        - port: 6379
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-ingress
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  # Postgres (CNPG) needs 5432 from in-namespace clients (barbu-server, the grafana-pg-ro job), and
+  # all ports from the CNPG operator namespace — its instance-status HTTP scrape (8000) is otherwise
+  # blocked, so the Cluster reports "Instance Status Extraction Error" and PostgresNotReady fires.
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: barbu-postgres
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
+      ports:
+        - port: 5432
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.postgresOperatorNamespace }}
 {{- if .Values.networkPolicy.linkerd }}
 ---
 apiVersion: networking.k8s.io/v1
@@ -93,10 +141,13 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 spec:
-  # default-deny must not break the mesh: allow the Linkerd proxy ports from the control plane and
-  # meshed peers, and egress to the control plane (identity/destination/policy).
+  # default-deny-ingress must not break the mesh: allow the proxy ports (4143/4191) from the control
+  # plane and meshed peers. Egress is intentionally NOT constrained here — only ingress is
+  # default-denied, so meshed pods already reach the control plane. Adding an egress clause on
+  # podSelector {} would clamp EVERY pod's egress to linkerd only, breaking DNS and datastore/backup
+  # access for the pods that have no other egress rule (redis, postgres, the grafana-pg-ro job).
   podSelector: {}
-  policyTypes: [Ingress, Egress]
+  policyTypes: [Ingress]
   ingress:
     - from:
         - namespaceSelector:
@@ -104,14 +155,9 @@ spec:
               kubernetes.io/metadata.name: linkerd
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: barbu
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}
       ports:
         - port: 4143
         - port: 4191
-  egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: linkerd
 {{- end }}
 {{- end }}
