@@ -59,10 +59,10 @@ module "kube-hetzner" {
   autoscaler_nodepools = [
     {
       name        = "elastic"
-      server_type = "cx23"
+      server_type = "cx33"          # même profil que le worker socle ; 1 nœud tient tous les pods élastiques
       location    = "nbg1"
       min_nodes   = 0
-      max_nodes   = 3
+      max_nodes   = 2               # 1 cx33 couvre la charge max KEDA (~6 pods élastiques) ; +1 de marge
       taints = [
         {
           key    = "barbu.dev/elastic"

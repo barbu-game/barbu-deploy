@@ -71,6 +71,27 @@ source inutilisé ajoute plus de surface que le one-liner n'en retire. **Le cons
 ajoute un jour un nodepool ARM** (`cax…`) — là il faut un vrai snapshot arm de toute façon :
 `packer build -only='hcloud.microos-arm-snapshot' …` puis retirer le patch (revenir à `arm`).
 
+## Control-plane HA (3 membres etcd + LB)
+
+`control_plane_nodepools` = **3 nodepools** (`control-plane`/nbg1, `control-plane-fsn`/fsn1,
+`control-plane-hel`/hel1, count 1 chacun) → **quorum etcd 3, tolère 1 panne CP**. `use_control_plane_lb
+= true` place un **LB Hetzner** devant les 3 apiservers → l'endpoint API est le LB (le kubeconfig
+pointe l'IP du LB), pas une IP de CP. Pourquoi 3 CP : le control-plane sous-dimensionné étranglait
+l'apiserver, ce qui privait le control-plane Linkerd de sa capacité à servir les nouveaux proxies
+(pods meshés qui wedgent au boot) — 3 CP répartissent la charge de watches.
+
+> **Migration 1→3 sur cluster vivant (fait 2026-07-15)** : le plan doit être **non destructif** — il
+> ne doit CRÉER que les 2 nouveaux CP + le LB, et **re-run** (replace de `null_resource`) la config du
+> CP existant + l'agent du worker ; **aucun `hcloud_server`/volume existant détruit** (vérifier avant
+> apply : `grep hcloud_server /tmp/plan.txt | grep -iE 'destroyed|replaced'` doit être vide).
+>
+> ⚠️ **Gotcha — la reconfig de l'agent laisse le WORKER cordonné.** Pendant l'apply, k3s reconfigure
+> l'agent du worker et le laisse `unschedulable` (taint `node.kubernetes.io/unschedulable`) sans le
+> dé-cordonner → **tous les pods app passent `Pending` → site down**. Fix immédiat :
+> `kubectl uncordon k3s-worker-zez`. Le pod Traefik (volume RWO acme.json) met ensuite ~30-60 s à
+> réattacher son volume avant de servir. **Prévoir une courte fenêtre de coupure** pour ce type de
+> migration control-plane.
+
 ## Détruire
 ```bash
 terraform destroy
