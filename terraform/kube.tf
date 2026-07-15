@@ -74,9 +74,13 @@ module "kube-hetzner" {
   ]
 
   # Scale-down patient (évite le flapping ; facturation Hetzner horaire de toute façon).
+  # skip-nodes-with-local-storage=false : nos pods meshés ont des emptyDir (sidecar Linkerd
+  # identity/xtables + /tmp de l'app), tous ÉPHÉMÈRES (le vrai état est dans Redis) → sans ça
+  # l'autoscaler refuse de retirer un nœud élastique portant un pod serveur → scale-to-zero cassé.
   cluster_autoscaler_extra_args = [
     "--scale-down-unneeded-time=10m",
     "--scale-down-delay-after-add=10m",
+    "--skip-nodes-with-local-storage=false",
   ]
 
   # Ingress: Traefik (default), exposed on the worker's public IP via Klipper — no billed Hetzner LB.
