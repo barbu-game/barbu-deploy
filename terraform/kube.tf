@@ -32,6 +32,32 @@ module "kube-hetzner" {
     }
   ]
 
+  # Élasticité des machines : le cluster-autoscaler ajoute/retire des VM worker sous charge. Taint
+  # `barbu.dev/elastic` + toleration côté chart barbu-server → seuls les pods serveur élastiques y
+  # atterrissent ; le socle reste sur le nodepool `worker` fixe. min 0 = 0 nœud (0 coût) au repos.
+  autoscaler_nodepools = [
+    {
+      name        = "elastic"
+      server_type = "cx23"
+      location    = "nbg1"
+      min_nodes   = 0
+      max_nodes   = 3
+      taints = [
+        {
+          key    = "barbu.dev/elastic"
+          value  = "true"
+          effect = "NoSchedule"
+        }
+      ]
+    }
+  ]
+
+  # Scale-down patient (évite le flapping ; facturation Hetzner horaire de toute façon).
+  cluster_autoscaler_extra_args = [
+    "--scale-down-unneeded-time=10m",
+    "--scale-down-delay-after-add=10m",
+  ]
+
   # Ingress: Traefik (default), exposed on the worker's public IP via Klipper — no billed Hetzner LB.
   ingress_controller      = "traefik"
   enable_klipper_metal_lb = true
