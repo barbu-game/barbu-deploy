@@ -10,6 +10,9 @@ module "kube-hetzner" {
 
   network_region = "eu-central"
 
+  # HA du control-plane : 3 membres etcd (quorum, tolère 1 panne) répartis sur 3 DC allemands.
+  # Le nodepool `control-plane` (nbg1) EXISTANT est laissé à l'identique pour ne pas recréer le CP en
+  # place ; on AJOUTE deux nodepools (fsn1, hel1). Un LB devant les 3 apiservers = endpoint API HA.
   control_plane_nodepools = [
     {
       name        = "control-plane"
@@ -18,8 +21,26 @@ module "kube-hetzner" {
       labels      = []
       taints      = [] # kube-hetzner taints control-plane by default (no app workloads)
       count       = 1
+    },
+    {
+      name        = "control-plane-fsn"
+      server_type = "cx23"
+      location    = "fsn1"
+      labels      = []
+      taints      = []
+      count       = 1
+    },
+    {
+      name        = "control-plane-hel"
+      server_type = "cx23"
+      location    = "hel1"
+      labels      = []
+      taints      = []
+      count       = 1
     }
   ]
+
+  use_control_plane_lb = true
 
   agent_nodepools = [
     {
