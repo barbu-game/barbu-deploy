@@ -10,7 +10,7 @@ podRouting:
 
 image:
   repository: ghcr.io/barbu-game/barbu-server
-  tag: "0.26.0" # bumped by the release pipeline
+  tag: "0.26.1" # bumped by the release pipeline
   pullPolicy: IfNotPresent
 
 imagePullSecret: ghcr-pull
