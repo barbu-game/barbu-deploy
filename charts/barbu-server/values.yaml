@@ -45,6 +45,14 @@ resources:
     cpu: "1"
     memory: 768Mi
 
+# Toleration du taint du nodepool autoscalé : autorise les pods serveur élastiques à atterrir sur les
+# nœuds éphémères ajoutés par le cluster-autoscaler (le socle, lui, reste sur le worker fixe).
+tolerations:
+  - key: barbu.dev/elastic
+    operator: Equal
+    value: "true"
+    effect: NoSchedule
+
 metrics:
   serviceMonitor:
     enabled: true

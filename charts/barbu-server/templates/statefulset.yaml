@@ -32,6 +32,10 @@ spec:
           labelSelector:
             matchLabels:
               app: {{ .Chart.Name }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
