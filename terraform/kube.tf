@@ -16,7 +16,7 @@ module "kube-hetzner" {
   control_plane_nodepools = [
     {
       name        = "control-plane"
-      server_type = "cx23"
+      server_type = "cx33"
       location    = "nbg1"
       labels      = []
       taints      = [] # kube-hetzner taints control-plane by default (no app workloads)
@@ -24,7 +24,7 @@ module "kube-hetzner" {
     },
     {
       name        = "control-plane-fsn"
-      server_type = "cx23"
+      server_type = "cx33"
       location    = "fsn1"
       labels      = []
       taints      = []
@@ -32,7 +32,7 @@ module "kube-hetzner" {
     },
     {
       name        = "control-plane-hel"
-      server_type = "cx23"
+      server_type = "cx33"
       location    = "hel1"
       labels      = []
       taints      = []
