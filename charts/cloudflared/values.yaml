@@ -2,5 +2,5 @@ image:
   repository: cloudflare/cloudflared
   tag: "2026.5.2"
 replicaCount: 2
-# Secret créé hors-git (cf. plan Task 6), clé "token" = sortie terraform tunnel_token.
+# Secret created out-of-git, key "token" = terraform tunnel_token output.
 tokenSecret: cloudflared-token

@@ -5,11 +5,10 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 ---
-# Lecture seule cluster-wide : l'informer d'events couvre tout le cluster et
-# enrichit chaque event en lisant l'objet impliqué (pod, deployment, CRD…) avant
-# le routage. Aucun moyen de scoper le watcher à un namespace, donc get/list/watch
-# sur */* est requis (cf. RBAC recommandé amont). Le feed Discord, lui, reste
-# filtré à namespace=barbu + kind=Pod au routage.
+# Cluster-wide read-only: the events informer covers the whole cluster and enriches
+# each event by reading the involved object (pod, deployment, CRD…) before routing.
+# The watcher can't be scoped to a namespace, so get/list/watch on */* is required.
+# The Discord feed itself stays filtered to namespace=barbu + kind=Pod at routing time.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -36,7 +35,7 @@ subjects:
     name: {{ .Chart.Name }}
     namespace: {{ .Release.Namespace }}
 ---
-# Lease pour l'élection de leader (v1.7), namespacé à la Release.
+# Lease for leader election (v1.7), namespaced to the Release.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:

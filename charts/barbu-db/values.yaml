@@ -11,11 +11,10 @@ cluster:
   # Secret (key: password) whose value CNPG sets as the grafana_ro role password.
   roSecret: grafana-pg-ro
 
-# CNPG backup to S3 (base backup + continuous WAL / PITR) — fully wired and
-# production-ready. Disabled on purpose: Hetzner Object Storage bills a ~6 €/mo
-# flat minimum regardless of usage, which is disproportionate for a sub-100 MB
-# database whose live state lives in Redis. Flip `enabled: true` (and provision
-# the barbu-backups bucket + barbu-backup-s3 secret) to turn it on unchanged.
+# CNPG backup to S3 (base backup + continuous WAL / PITR). Disabled on purpose:
+# Hetzner Object Storage bills a ~6 €/mo flat minimum regardless of usage,
+# disproportionate for a sub-100 MB database whose live state lives in Redis.
+# Enable with the barbu-backups bucket + barbu-backup-s3 secret provisioned.
 backup:
   enabled: false
   schedule: "0 0 3 * * *"        # 03:00 UTC daily (6-field CNPG cron)

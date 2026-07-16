@@ -1,8 +1,8 @@
-# Un seul tunnel Cloudflare devant les UI d'admin privées (Grafana, ArgoCD).
-# Remotely-managed (config_src = "cloudflare") : le cloudflared in-cluster ne porte
-# que le token ; le routage ingress vit dans cloudflare_zero_trust_tunnel_cloudflared_config.
+# A single Cloudflare tunnel in front of the private admin UIs (Grafana, ArgoCD).
+# Remotely-managed (config_src = "cloudflare"): the in-cluster cloudflared carries
+# only the token; the ingress routing lives in cloudflare_zero_trust_tunnel_cloudflared_config.
 resource "random_id" "tunnel_secret" {
-  byte_length = 35 # >= 32 octets décodés, contrainte de l'API
+  byte_length = 35 # >= 32 decoded bytes, an API constraint
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared" "barbu" {
@@ -18,13 +18,13 @@ data "cloudflare_zero_trust_tunnel_cloudflared_token" "barbu" {
 }
 
 output "tunnel_token" {
-  description = "Token pour le cloudflared in-cluster (à injecter dans le secret cloudflared-token)."
+  description = "Token for the in-cluster cloudflared (inject into the cloudflared-token secret)."
   value       = data.cloudflare_zero_trust_tunnel_cloudflared_token.barbu.token
   sensitive   = true
 }
 
 output "tunnel_cname" {
-  description = "Cible CNAME des hostnames d'admin proxied."
+  description = "CNAME target for the proxied admin hostnames."
   value       = "${cloudflare_zero_trust_tunnel_cloudflared.barbu.id}.cfargotunnel.com"
 }
 
@@ -39,7 +39,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "barbu" {
         service  = "http://kps-grafana.monitoring.svc.cluster.local:80"
       },
       {
-        # argocd-server passe en --insecure → HTTP simple sur :80.
+        # argocd-server runs with --insecure → plain HTTP on :80.
         hostname = "argocd.${var.admin_domain}"
         service  = "http://argocd-server.argocd.svc.cluster.local:80"
       },

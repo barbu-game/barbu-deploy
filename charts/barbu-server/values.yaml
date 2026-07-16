@@ -34,7 +34,7 @@ config:
   # Origin allowed to call the API from the browser (CORS). Must match the deployed web host.
   corsAllowedOrigins: https://barbu.kour0.com
 
-# A SealedSecret (cluster-secrets/barbu-barbu-server-secrets) holds JDBC_USER, JDBC_PASSWORD, JWT_SECRET.
+# SealedSecret holds JDBC_USER, JDBC_PASSWORD, JWT_SECRET.
 secretName: barbu-server-secrets
 
 resources:
@@ -45,8 +45,8 @@ resources:
     cpu: "1"
     memory: 768Mi
 
-# Toleration du taint du nodepool autoscalé : autorise les pods serveur élastiques à atterrir sur les
-# nœuds éphémères ajoutés par le cluster-autoscaler (le socle, lui, reste sur le worker fixe).
+# Toleration for the autoscaled nodepool taint: lets the elastic server pods land on the
+# ephemeral nodes added by the cluster-autoscaler (the baseline stays on the fixed worker).
 tolerations:
   - key: barbu.dev/elastic
     operator: Equal
@@ -68,8 +68,8 @@ autoscaling:
   roomsPerPod: "10"
   prometheusServerAddress: http://kps-kube-prometheus-stack-prometheus.monitoring.svc:9090
 
-# Micro-segmentation du namespace barbu (default-deny + allows explicites). linkerd=true ajoute les
-# allows du mesh pour que le default-deny ne casse pas mTLS (Phase 2, Task 4).
+# Micro-segmentation of the barbu namespace (default-deny + explicit allows). linkerd=true adds the
+# mesh allows so the default-deny does not break mTLS.
 networkPolicy:
   enabled: true
   ingressNamespace: traefik

@@ -3,13 +3,13 @@ image:
   tag: "v1.7"
   pullPolicy: IfNotPresent
 
-# Périmètre du feed : on ne route que les événements de pods du namespace barbu.
+# Feed scope: we only route pod events from the barbu namespace.
 target:
   namespace: barbu
   kind: Pod
 
-# Secret scellé (SealedSecret templates/discord-sealedsecret.yaml), clé "url" = webhook Discord.
-# Injecté en env DISCORD_WEBHOOK_URL ; l'event-exporter substitue ${...} dans sa config.
+# Sealed secret, key "url" = Discord webhook. Injected as env DISCORD_WEBHOOK_URL;
+# the event-exporter substitutes ${...} in its config.
 discordSecret: event-exporter-discord
 
 resources:

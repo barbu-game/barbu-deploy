@@ -1,5 +1,5 @@
 # Stateless client. 1 replica on the constrained worker; scalable later.
-# NEXT_PUBLIC_WS_URL is baked into the image at build time (see Plan 2).
+# NEXT_PUBLIC_WS_URL is baked into the image at build time.
 replicaCount: 1
 
 image:

@@ -40,12 +40,12 @@ variable "cloudflare_zone_id" {
 }
 
 variable "cloudflare_account_id" {
-  description = "Cloudflare account ID (dashboard Zero Trust, ou segment d'URL dash.cloudflare.com/<id>)."
+  description = "Cloudflare account ID (Zero Trust dashboard, or URL segment dash.cloudflare.com/<id>)."
   type        = string
 }
 
 variable "admin_email" {
-  description = "Email autorisé par la politique Cloudflare Access sur Grafana et ArgoCD."
+  description = "Email allowed by the Cloudflare Access policy on Grafana and ArgoCD."
   type        = string
   default     = ""
 }
@@ -57,7 +57,7 @@ variable "app_domain" {
 }
 
 variable "admin_domain" {
-  description = "Base host for the admin UIs (grafana/argocd). 1er niveau pour rester couvert par l'Universal SSL gratuit (*.kour0.com)."
+  description = "Base host for the admin UIs (grafana/argocd). First level to stay covered by free Universal SSL (*.kour0.com)."
   type        = string
   default     = "kour0.com"
 }

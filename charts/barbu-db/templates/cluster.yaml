@@ -5,10 +5,10 @@ metadata:
 spec:
   instances: {{ .Values.cluster.instances }}
   imageName: {{ .Values.cluster.imageName }}
-  # Propagated to CNPG-managed Services and Pods (metadata only, no rollout). opaque-ports lets a
-  # meshed client (barbu-server) treat barbu-postgres-rw:5432 as an opaque TCP stream instead of
-  # running Linkerd protocol detection on it; inject: disabled keeps Postgres itself out of the mesh
-  # so a restart under namespace-wide injection can't give it a sidecar.
+  # Propagated to CNPG-managed Services and Pods (metadata only, no rollout). opaque-ports makes
+  # meshed clients treat 5432 as an opaque TCP stream (no Linkerd protocol detection); inject:
+  # disabled keeps Postgres out of the mesh so a restart under namespace-wide injection can't
+  # give it a sidecar.
   inheritedMetadata:
     annotations:
       config.linkerd.io/opaque-ports: "5432"
@@ -22,9 +22,9 @@ spec:
       owner: {{ .Values.cluster.owner }}
       secret:
         name: {{ .Values.cluster.appSecret }}
-  # Grant the app owner CREATEROLE so the grafana-pg-ro PostSync job can create the
-  # read-only role and its SELECT grants. passwordSecret reuses the secret CNPG
-  # already holds for the owner, so reconciliation keeps the app credentials unchanged.
+  # App owner needs CREATEROLE so the PostSync grant job can create the read-only role and its
+  # SELECT grants. passwordSecret reuses the owner's existing secret, so reconciliation leaves
+  # the app credentials unchanged.
   managed:
     roles:
       - name: {{ .Values.cluster.owner }}
@@ -33,10 +33,10 @@ spec:
         createrole: true
         passwordSecret:
           name: {{ .Values.cluster.appSecret }}
-      # CNPG (superuser) owns grafana_ro's password. PostgreSQL 16 hardened
-      # CREATEROLE: a non-admin role can no longer ALTER another role's password,
-      # so the app owner can't set it from the PostSync job — letting CNPG manage
-      # it keeps the read-only login working across fresh installs and restores.
+      # CNPG (superuser) owns grafana_ro's password. PostgreSQL 16 hardened CREATEROLE so a
+      # non-admin role can't ALTER another role's password; the app owner therefore can't set it
+      # from the grant job, and letting CNPG manage it keeps the read-only login working across
+      # fresh installs and restores.
       - name: grafana_ro
         ensure: present
         login: true

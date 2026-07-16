@@ -13,8 +13,8 @@ spec:
           for: 2m
           labels: { severity: critical }
           annotations:
-            summary: "Serveur Barbu injoignable"
-            description: "La cible Prometheus barbu-server est down depuis 2 min."
+            summary: "Barbu server unreachable"
+            description: "The barbu-server Prometheus target has been down for 2 min."
         - alert: BarbuServerHigh5xx
           expr: |
             sum(rate(http_server_requests_seconds_count{service="barbu-server",status=~"5.."}[5m]))
@@ -22,20 +22,20 @@ spec:
           for: 10m
           labels: { severity: warning }
           annotations:
-            summary: "Taux de 5xx élevé (serveur Barbu)"
-            description: "Plus de 5% de réponses 5xx sur 10 min."
+            summary: "High 5xx rate (Barbu server)"
+            description: "More than 5% of 5xx responses over 10 min."
         - alert: WorkerMemoryHigh
           expr: |
             (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
           for: 10m
           labels: { severity: warning }
           annotations:
-            summary: "Mémoire du nœud > 90%"
-            description: "Le worker est sous pression mémoire depuis 10 min."
+            summary: "Node memory > 90%"
+            description: "The worker has been under memory pressure for 10 min."
         - alert: PostgresNotReady
           expr: cnpg_pg_replication_in_recovery == 1 or absent(cnpg_collector_up{namespace="barbu"})
           for: 5m
           labels: { severity: critical }
           annotations:
-            summary: "Postgres Barbu non sain"
-            description: "Le cluster CNPG barbu-postgres ne rapporte pas un état sain."
+            summary: "Barbu Postgres unhealthy"
+            description: "The CNPG barbu-postgres cluster does not report a healthy state."

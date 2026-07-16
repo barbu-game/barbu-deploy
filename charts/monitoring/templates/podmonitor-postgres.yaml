@@ -1,17 +1,15 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
-  # NOT "barbu-postgres": that name is reserved by the CNPG operator, which
-  # deletes a PodMonitor of that name on every cluster reconcile while the
-  # cluster has monitoring.enablePodMonitor=false — that fight made the scrape
-  # target vanish (and PostgresNotReady fire) at each reconcile/daily backup.
+  # NOT "barbu-postgres": the CNPG operator reserves that name and deletes any PodMonitor of it
+  # on every cluster reconcile (while monitoring.enablePodMonitor=false), which made the scrape
+  # target vanish and PostgresNotReady fire at each reconcile/daily backup.
   name: barbu-postgres-metrics
   labels:
     release: kps
 spec:
-  # Lives in the monitoring namespace but targets the CNPG pods in the barbu
-  # namespace; without this scrape, cnpg_collector_up is absent and the
-  # PostgresNotReady alert fires permanently.
+  # Lives in the monitoring namespace but targets the CNPG pods in barbu; without this scrape
+  # cnpg_collector_up is absent and PostgresNotReady fires permanently.
   namespaceSelector:
     matchNames: [barbu]
   selector:

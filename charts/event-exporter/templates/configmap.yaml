@@ -5,12 +5,10 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 data:
-  # Les {{ "{{" }} … {{ "}}" }} de la couche event-exporter (Go template + sprig) sont
-  # émis littéralement via `…` pour ne pas être interprétés par Helm ; seuls
-  # .Values.* relèvent de Helm. NB (tmpl.go) : seules les valeurs string sont
-  # templatées — un int/bool dans le layout devient null —, et Discord refuse une
-  # couleur en string (400). D'où l'absence de `color`, la sévérité passant par
-  # un emoji dans le titre.
+  # The layout's {{ "{{" }} … {{ "}}" }} belong to event-exporter (Go template + sprig), backtick-
+  # escaped so Helm emits them literally; only .Values.* are Helm's. event-exporter templates only
+  # string values (an int/bool becomes null), and Discord rejects a color sent as a string (400):
+  # hence no `color`, severity carried by an emoji in the title.
   config.yaml: |
     logLevel: error
     logFormat: json
@@ -23,8 +21,8 @@ data:
     receivers:
       - name: "discord"
         webhook:
-          # ${DISCORD_WEBHOOK_URL} est résolu à l'exécution depuis le secret (env),
-          # donc l'URL ne touche jamais git.
+          # ${DISCORD_WEBHOOK_URL} is resolved at runtime from the secret (env),
+          # so the URL never touches git.
           endpoint: "${DISCORD_WEBHOOK_URL}"
           headers:
             Content-Type: "application/json"

@@ -1,6 +1,6 @@
-# Mono-réplique imposée : Uptime Kuma stocke tout dans une SQLite (/app/data),
-# mono-writer, donc pas de scale-out. La stratégie Recreate évite deux pods sur
-# le même volume RWO pendant un rollout.
+# Single replica enforced: Uptime Kuma stores everything in a SQLite (/app/data),
+# single-writer, so no scale-out. The Recreate strategy avoids two pods on
+# the same RWO volume during a rollout.
 image:
   repository: louislam/uptime-kuma
   tag: "2.4.0"

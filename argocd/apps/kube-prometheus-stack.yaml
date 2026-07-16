@@ -33,9 +33,8 @@ spec:
             resources:
               requests: { cpu: 10m, memory: 64Mi }
               limits: { memory: 128Mi }
-            # Operator v0.77 can't validate discord webhook_url_file in a raw config,
-            # so the routing/receiver lives in an AlertmanagerConfig CR (barbu-monitoring
-            # chart) where the webhook URL is a secret keyref, kept out of git.
+            # Operator v0.77 can't validate discord webhook_url_file in a raw config, so
+            # routing lives in an AlertmanagerConfig CR with the webhook URL as a secret keyref.
             alertmanagerConfiguration:
               name: barbu-discord
         grafana:
@@ -47,8 +46,7 @@ spec:
           resources:
             requests: { cpu: 50m, memory: 128Mi }
             limits: { memory: 256Mi }
-          # Plus d'ingress public : Grafana est servi via le Cloudflare Tunnel (cf. charts/cloudflared)
-          # et gardé par Cloudflare Access.
+          # Grafana is served through the Cloudflare Tunnel and guarded by Cloudflare Access, not public ingress.
           ingress:
             enabled: false
           sidecar:
@@ -74,8 +72,8 @@ spec:
         kubeEtcd: { enabled: false }
         kubeControllerManager: { enabled: false }
         kubeScheduler: { enabled: false }
-        # k3s embarque kube-proxy et n'expose ses métriques que sur 127.0.0.1:10249,
-        # donc inscrapable : la cible disparaît et déclenche KubeProxyDown en boucle.
+        # k3s bundles kube-proxy and only exposes its metrics on 127.0.0.1:10249,
+        # so it is unscrapable: the target disappears and fires KubeProxyDown in a loop.
         kubeProxy: { enabled: false }
   destination:
     server: https://kubernetes.default.svc

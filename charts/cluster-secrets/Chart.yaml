@@ -1,5 +1,5 @@
 apiVersion: v2
 name: cluster-secrets
-description: SealedSecrets des secrets applicatifs (déchiffrés in-cluster par sealed-secrets)
+description: SealedSecrets for the application secrets (decrypted in-cluster by sealed-secrets)
 type: application
 version: 0.1.0

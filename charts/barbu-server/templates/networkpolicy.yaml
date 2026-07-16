@@ -64,9 +64,8 @@ spec:
         - port: 53
           protocol: TCP
 {{- if .Values.networkPolicy.linkerd }}
-    # This egress policy makes barbu-server default-deny egress, which also blocks its Linkerd proxy
-    # from reaching the control plane (identity/destination/policy) — so a meshed server never obtains
-    # its identity and stays unready. Allow egress to the linkerd namespace to let the proxy bootstrap.
+    # Default-deny egress also blocks the Linkerd proxy from reaching the control plane, so a meshed
+    # server never gets its identity; allow egress to linkerd so the proxy can bootstrap.
     - to:
         - namespaceSelector:
             matchLabels:
@@ -80,9 +79,8 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 spec:
-  # default-deny (podSelector {}) also blocks Prometheus in the monitoring namespace from scraping
-  # any barbu pod — server metrics (8080) and the CNPG exporter (9187). Without this the targets
-  # show down and PostgresNotReady fires via absent(cnpg_collector_up) even while the DB is healthy.
+  # default-deny blocks Prometheus (monitoring ns) from scraping barbu pods: server metrics (8080)
+  # and CNPG exporter (9187). Without it targets show down and PostgresNotReady fires on a healthy DB.
   podSelector: {}
   policyTypes: [Ingress]
   ingress:
@@ -101,9 +99,8 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 spec:
-  # default-deny-ingress also selects the datastores; allow-server-to-datastores only opened the
-  # egress side. Open Redis 6379 to in-namespace clients (barbu-server) so the connection isn't
-  # dropped at the Redis ingress (the failure looks like a Linkerd "Connection closed prematurely").
+  # default-deny-ingress also selects the datastores (egress rules don't open ingress). Open Redis
+  # 6379 to in-namespace clients so the connection isn't dropped at the Redis ingress.
   podSelector:
     matchLabels:
       app: barbu-redis
@@ -123,9 +120,8 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 spec:
-  # Postgres (CNPG) needs 5432 from in-namespace clients (barbu-server, the grafana-pg-ro job), and
-  # all ports from the CNPG operator namespace — its instance-status HTTP scrape (8000) is otherwise
-  # blocked, so the Cluster reports "Instance Status Extraction Error" and PostgresNotReady fires.
+  # Postgres (CNPG) needs 5432 from in-namespace clients, and all ports from the CNPG operator ns:
+  # its instance-status scrape (8000) is otherwise blocked and the Cluster reports NotReady.
   podSelector:
     matchLabels:
       cnpg.io/cluster: barbu-postgres
@@ -150,11 +146,9 @@ metadata:
   labels:
     app: {{ .Chart.Name }}
 spec:
-  # default-deny-ingress must not break the mesh: allow the proxy ports (4143/4191) from the control
-  # plane and meshed peers. Egress is intentionally NOT constrained here — only ingress is
-  # default-denied, so meshed pods already reach the control plane. Adding an egress clause on
-  # podSelector {} would clamp EVERY pod's egress to linkerd only, breaking DNS and datastore/backup
-  # access for the pods that have no other egress rule (redis, postgres, the grafana-pg-ro job).
+  # Allow proxy ports (4143/4191) from the control plane and meshed peers so default-deny-ingress
+  # doesn't break the mesh. Do NOT add an egress clause on podSelector {}: it would clamp every pod's
+  # egress to linkerd only, breaking DNS and datastore access for pods with no other egress rule.
   podSelector: {}
   policyTypes: [Ingress]
   ingress:

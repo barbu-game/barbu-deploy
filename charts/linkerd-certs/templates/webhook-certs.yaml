@@ -2,9 +2,8 @@
 # policy-validator). Linkerd otherwise self-signs these via a Helm `lookup`, which ArgoCD's
 # `helm template` can't run — it regenerates a mismatched cert on every sync, so the API server
 # rejects the webhook ("tls: bad certificate") until an injector restart, leaving pods unmeshed.
-# A dedicated long-lived CA keeps each serving cert and the injected caBundle in lockstep; the
-# caBundle is wired onto the webhook configs by cert-manager's ca-injector (proxyInjector/
-# profileValidator/policyValidator.injectCaFrom in the linkerd-control-plane values).
+# A dedicated long-lived CA keeps each serving cert and the injected caBundle in lockstep;
+# cert-manager's ca-injector wires the caBundle onto the webhook configs.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:

@@ -27,9 +27,8 @@ spec:
               valueFrom: { secretKeyRef: { name: {{ .Values.postgres.appSecret }}, key: username } }
             - name: PGPASSWORD
               valueFrom: { secretKeyRef: { name: {{ .Values.postgres.appSecret }}, key: password } }
-          # The role and its password are owned by CNPG (see barbu-db managed.roles);
-          # this hook only applies the object grants, which the database owner is
-          # allowed to do without ALTER-ing another role under PostgreSQL 16.
+          # The role and its password are owned by CNPG; this hook only applies the object grants,
+          # which the database owner may do without ALTER-ing another role under PostgreSQL 16.
           command:
             - /bin/sh
             - -c

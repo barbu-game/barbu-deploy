@@ -1,32 +1,32 @@
 {
-  "title": "Barbu — Infra & Serveur",
+  "title": "Barbu — Infra & Server",
   "uid": "barbu-infra",
   "schemaVersion": 39,
   "editable": false,
   "time": { "from": "now-6h", "to": "now" },
   "panels": [
     {
-      "type": "timeseries", "title": "CPU nœud (%)",
+      "type": "timeseries", "title": "Node CPU (%)",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
       "targets": [ { "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "legendFormat": "cpu" } ]
     },
     {
-      "type": "timeseries", "title": "Mémoire nœud utilisée (%)",
+      "type": "timeseries", "title": "Node memory used (%)",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
       "targets": [ { "expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "mem" } ]
     },
     {
-      "type": "timeseries", "title": "JVM heap serveur (MB)",
+      "type": "timeseries", "title": "Server JVM heap (MB)",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "targets": [ { "expr": "sum(jvm_memory_used_bytes{service=\"barbu-server\",area=\"heap\"}) / 1024 / 1024", "legendFormat": "heap" } ]
     },
     {
-      "type": "timeseries", "title": "Latence HTTP p95 (s)",
+      "type": "timeseries", "title": "HTTP latency p95 (s)",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
       "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{service=\"barbu-server\"}[5m])) by (le))", "legendFormat": "p95" } ]
     },
     {
-      "type": "timeseries", "title": "Réponses 5xx/s",
+      "type": "timeseries", "title": "5xx responses/s",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
       "targets": [ { "expr": "sum(rate(http_server_requests_seconds_count{service=\"barbu-server\",status=~\"5..\"}[5m]))", "legendFormat": "5xx" } ]
     }

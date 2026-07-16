@@ -90,8 +90,7 @@ spec:
           lifecycle:
             preStop:
               exec:
-                # Let Traefik observe readiness=NotReady before shutdown (the shutdown handler then
-                # releases leases). The Debian JRE image provides /bin/sh.
+                # sleep lets Traefik observe NotReady before shutdown. The Debian JRE image has /bin/sh.
                 command: ["/bin/sh", "-c", "sleep 5"]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

@@ -10,15 +10,14 @@ module "kube-hetzner" {
 
   network_region = "eu-central"
 
-  # Single application worker: an automatic k3s/OS upgrade cordons+drains it, evicting Traefik and
-  # taking the whole site down. Upgrade deliberately during a chosen window instead (the module docs
-  # themselves recommend disabling OS auto-updates on single-node clusters).
+  # Single worker: an auto k3s/OS upgrade cordons+drains it, evicting Traefik and downing the site.
+  # Upgrade manually in a chosen window.
   automatically_upgrade_k3s = false
   automatically_upgrade_os  = false
 
-  # HA du control-plane : 3 membres etcd (quorum, tolère 1 panne) répartis sur 3 DC allemands.
-  # Le nodepool `control-plane` (nbg1) EXISTANT est laissé à l'identique pour ne pas recréer le CP en
-  # place ; on AJOUTE deux nodepools (fsn1, hel1). Un LB devant les 3 apiservers = endpoint API HA.
+  # Control-plane HA: 3 etcd members (quorum tolerates 1 failure) across 3 DCs. The existing
+  # `control-plane` nodepool (nbg1) stays untouched so the CP isn't recreated in place; the two
+  # added nodepools (fsn1, hel1) plus the apiserver LB give an HA endpoint.
   control_plane_nodepools = [
     {
       name        = "control-plane"
@@ -59,16 +58,16 @@ module "kube-hetzner" {
     }
   ]
 
-  # Élasticité des machines : le cluster-autoscaler ajoute/retire des VM worker sous charge. Taint
-  # `barbu.dev/elastic` + toleration côté chart barbu-server → seuls les pods serveur élastiques y
-  # atterrissent ; le socle reste sur le nodepool `worker` fixe. min 0 = 0 nœud (0 coût) au repos.
+  # Cluster-autoscaler adds/removes worker VMs under load. The `barbu.dev/elastic` taint + matching
+  # toleration keep only elastic server pods here; the baseline stays on the fixed `worker` nodepool.
+  # min 0 scales to zero (no cost) when idle.
   autoscaler_nodepools = [
     {
       name        = "elastic"
-      server_type = "cx33"          # même profil que le worker socle ; 1 nœud tient tous les pods élastiques
+      server_type = "cx33"          # same profile as the baseline worker; 1 node holds all elastic pods
       location    = "nbg1"
       min_nodes   = 0
-      max_nodes   = 2               # 1 cx33 couvre la charge max KEDA (~6 pods élastiques) ; +1 de marge
+      max_nodes   = 2               # 1 cx33 covers peak KEDA load (~6 elastic pods); +1 for headroom
       taints = [
         {
           key    = "barbu.dev/elastic"
@@ -79,17 +78,16 @@ module "kube-hetzner" {
     }
   ]
 
-  # Scale-down patient (évite le flapping ; facturation Hetzner horaire de toute façon).
-  # skip-nodes-with-local-storage=false : nos pods meshés ont des emptyDir (sidecar Linkerd
-  # identity/xtables + /tmp de l'app), tous ÉPHÉMÈRES (le vrai état est dans Redis) → sans ça
-  # l'autoscaler refuse de retirer un nœud élastique portant un pod serveur → scale-to-zero cassé.
+  # Patient scale-down avoids flapping (Hetzner bills hourly).
+  # skip-nodes-with-local-storage=false: meshed pods carry ephemeral emptyDirs (Linkerd sidecar,
+  # app /tmp); without the flag the autoscaler won't evict them and scale-to-zero never happens.
   cluster_autoscaler_extra_args = [
     "--scale-down-unneeded-time=10m",
     "--scale-down-delay-after-add=10m",
     "--skip-nodes-with-local-storage=false",
   ]
 
-  # Ingress: Traefik (default), exposed on the worker's public IP via Klipper — no billed Hetzner LB.
+  # Traefik ingress on the worker's public IP via Klipper — no billed Hetzner LB.
   ingress_controller      = "traefik"
   enable_klipper_metal_lb = true
 
@@ -114,20 +112,20 @@ module "kube-hetzner" {
     },
   ]
 
-  # We use Traefik's own ACME, not cert-manager.
+  # Traefik's own ACME handles certs; cert-manager off.
   enable_cert_manager = false
 
-  # Pin: kured ≥1.20 renamed its manifest asset to `-combined.yaml`, but module 2.18.0
-  # still fetches `kured-<v>-dockerhub.yaml`. 1.19.0 is the last release shipping that name.
+  # Pin: module 2.18.0 fetches `kured-<v>-dockerhub.yaml`; kured ≥1.20 renamed that asset to
+  # `-combined.yaml`. 1.19.0 is the last release shipping the old name.
   kured_version = "1.19.0"
 
-  # Pin the chart: overriding traefik_values REPLACES the module's defaults wholesale, so the
-  # schema must match this exact version (40.x/Traefik v3.7 moved redirect+TLS under ports.*.http).
+  # Overriding traefik_values replaces the module defaults wholesale, so the schema must match this
+  # chart version (40.x/Traefik v3.7 moved redirect+TLS under ports.*.http).
   traefik_version = "40.2.0"
 
-  # Single-replica Traefik terminating TLS via its own ACME (Let's Encrypt). Recreate strategy
-  # so the RWO ACME volume isn't held by two pods during a rollout. publishedservice arg restored
-  # from the module default (lost when overriding) so Ingress status gets the real ingress IP.
+  # Single-replica Traefik terminating TLS via its own ACME (Let's Encrypt). Recreate strategy so the
+  # RWO ACME volume isn't held by two pods during rollout. publishedservice arg restored (lost when
+  # overriding defaults) so Ingress status reports the real ingress IP.
   traefik_values = <<-EOT
     deployment:
       replicas: 1
@@ -178,11 +176,9 @@ module "kube-hetzner" {
       - "--providers.kubernetesingress.ingressendpoint.publishedservice=traefik/traefik"
   EOT
 
-  # Bootstrap ArgoCD : on attend seulement le repo-server. Le secret du repo
-  # (barbu-deploy-repo) est créé hors-git (cf. docs/secrets-runbook.md) : il ne peut
-  # pas l'être ici car extra_kustomize_parameters n'alimente que le rendu templatefile
-  # des .tpl, jamais l'environnement shell — $ARGOCD_REPO_SSH_KEY y était donc toujours
-  # vide et réécrasait le secret en clé vide à chaque apply.
+  # Bootstrap ArgoCD: wait only for the repo-server. The repo secret (barbu-deploy-repo) is created
+  # out-of-git because extra_kustomize_parameters feeds only the templatefile render, not the shell
+  # env — $ARGOCD_REPO_SSH_KEY would be empty and overwrite the secret with an empty key each apply.
   extra_kustomize_deployment_commands = <<-EOT
     kubectl -n argocd rollout status deploy/argocd-repo-server --timeout=300s
   EOT

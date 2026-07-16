@@ -5,8 +5,8 @@ resources:
   - https://raw.githubusercontent.com/argoproj/argo-cd/v2.13.2/manifests/install.yaml
   - app-of-apps.yaml
 namespace: argocd
-# argocd-server termine derrière le Cloudflare Tunnel (TLS terminé par Cloudflare) :
-# --insecure pour servir du HTTP simple sur :80, sinon redirection HTTPS en boucle.
+# argocd-server sits behind the Cloudflare Tunnel (TLS terminated by Cloudflare):
+# --insecure to serve plain HTTP on :80, otherwise an HTTPS redirect loop.
 patches:
   - patch: |-
       apiVersion: v1

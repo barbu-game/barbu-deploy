@@ -14,7 +14,7 @@ spec:
       labels:
         app: {{ .Chart.Name }}
       annotations:
-        # Redéploie le pod quand la config change (ConfigMap non versionné par défaut).
+        # Redeploys the pod when the config changes (ConfigMap not versioned by default).
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ .Chart.Name }}

@@ -6,41 +6,41 @@
   "time": { "from": "now-24h", "to": "now" },
   "panels": [
     {
-      "type": "stat", "title": "Joueurs actifs",
+      "type": "stat", "title": "Active players",
       "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
       "targets": [ { "expr": "barbu_players_active", "legendFormat": "players" } ]
     },
     {
-      "type": "stat", "title": "Rooms actives",
+      "type": "stat", "title": "Active rooms",
       "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
       "targets": [ { "expr": "barbu_rooms_active", "legendFormat": "rooms" } ]
     },
     {
-      "type": "stat", "title": "Bots actifs",
+      "type": "stat", "title": "Active bots",
       "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
       "targets": [ { "expr": "barbu_bots_active", "legendFormat": "bots" } ]
     },
     {
-      "type": "stat", "title": "File matchmaking",
+      "type": "stat", "title": "Matchmaking queue",
       "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
       "targets": [ { "expr": "barbu_matchmaking_queue", "legendFormat": "queue" } ]
     },
     {
-      "type": "timeseries", "title": "Parties démarrées / terminées (taux/h)",
+      "type": "timeseries", "title": "Games started / finished (rate/h)",
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "targets": [
-        { "expr": "sum(rate(barbu_games_started_total[1h])) * 3600", "legendFormat": "démarrées/h" },
-        { "expr": "sum(rate(barbu_games_finished_total[1h])) * 3600", "legendFormat": "terminées/h" }
+        { "expr": "sum(rate(barbu_games_started_total[1h])) * 3600", "legendFormat": "started/h" },
+        { "expr": "sum(rate(barbu_games_finished_total[1h])) * 3600", "legendFormat": "finished/h" }
       ]
     },
     {
-      "type": "stat", "title": "Joueurs uniques (comptes)",
+      "type": "stat", "title": "Unique players (accounts)",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "datasource": { "type": "postgres", "uid": "BarbuPostgres" },
       "targets": [ { "rawSql": "SELECT count(*) AS value FROM users;", "format": "table" } ]
     },
     {
-      "type": "timeseries", "title": "Parties par jour (SQL)",
+      "type": "timeseries", "title": "Games per day (SQL)",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 14 },
       "datasource": { "type": "postgres", "uid": "BarbuPostgres" },
       "targets": [ { "rawSql": "SELECT date_trunc('day', created_at) AS time, count(*) AS games FROM games GROUP BY 1 ORDER BY 1;", "format": "time_series" } ]

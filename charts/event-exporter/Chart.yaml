@@ -1,6 +1,6 @@
 apiVersion: v2
 name: event-exporter
-description: Pousse les événements Kubernetes des pods barbu (création/mort) vers Discord
+description: Pushes Kubernetes events from the barbu pods (creation/death) to Discord
 type: application
 version: 0.1.0
 appVersion: "1.7"
