@@ -26,3 +26,6 @@ resources:
   limits:
     cpu: 500m
     memory: 256Mi
+
+# Block ArgoCD sync until the Linkerd proxy-injector is ready, so pods are always meshed.
+waitForInjector: true

@@ -10,6 +10,12 @@ module "kube-hetzner" {
 
   network_region = "eu-central"
 
+  # Single application worker: an automatic k3s/OS upgrade cordons+drains it, evicting Traefik and
+  # taking the whole site down. Upgrade deliberately during a chosen window instead (the module docs
+  # themselves recommend disabling OS auto-updates on single-node clusters).
+  automatically_upgrade_k3s = false
+  automatically_upgrade_os  = false
+
   # HA du control-plane : 3 membres etcd (quorum, tolère 1 panne) répartis sur 3 DC allemands.
   # Le nodepool `control-plane` (nbg1) EXISTANT est laissé à l'identique pour ne pas recréer le CP en
   # place ; on AJOUTE deux nodepools (fsn1, hel1). Un LB devant les 3 apiservers = endpoint API HA.

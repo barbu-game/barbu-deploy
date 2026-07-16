@@ -1,0 +1,90 @@
+{{- if .Values.waitForInjector }}
+# PreSync hook: the barbu namespace is meshed, but the injector webhook fails open AND stays
+# non-functional for a moment after the injector pod is Ready (its cert/registration must propagate
+# to the API server). A pod created in that window starts unmeshed and needs a manual restart, and
+# ArgoCD sync-waves don't reliably gate on it. This hook blocks the app's sync until a server-side
+# dry-run pod creation actually comes back injected — the only reliable signal that the webhook is
+# functional (it exercises the real admission path without persisting anything). The hook pod is
+# inject:disabled or it would wait on itself.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Chart.Name }}-wait-injector
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ .Chart.Name }}-wait-injector
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "0"
+rules:
+  # server-side dry-run of a pod creation still requires the create verb; nothing is persisted
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ .Chart.Name }}-wait-injector
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "0"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Chart.Name }}-wait-injector
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Chart.Name }}-wait-injector
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Chart.Name }}-wait-injector
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  backoffLimit: 6
+  activeDeadlineSeconds: 600
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: disabled
+    spec:
+      serviceAccountName: {{ .Chart.Name }}-wait-injector
+      restartPolicy: Never
+      containers:
+        - name: wait
+          image: alpine/k8s:1.31.0
+          command:
+            - sh
+            - -c
+            - |
+              cat <<'YAML' > /tmp/canary.yaml
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: injector-canary
+                annotations:
+                  linkerd.io/inject: enabled
+              spec:
+                containers:
+                  - name: pause
+                    image: registry.k8s.io/pause:3.9
+              YAML
+              echo "waiting until the linkerd proxy-injector actually injects..."
+              until kubectl create --dry-run=server -o jsonpath='{.spec.initContainers[*].name}' -f /tmp/canary.yaml 2>/dev/null | grep -q linkerd-proxy; do
+                sleep 3
+              done
+              echo "linkerd proxy-injector is functional"
+{{- end }}

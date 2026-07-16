@@ -63,6 +63,15 @@ spec:
           protocol: UDP
         - port: 53
           protocol: TCP
+{{- if .Values.networkPolicy.linkerd }}
+    # This egress policy makes barbu-server default-deny egress, which also blocks its Linkerd proxy
+    # from reaching the control plane (identity/destination/policy) — so a meshed server never obtains
+    # its identity and stays unready. Allow egress to the linkerd namespace to let the proxy bootstrap.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: linkerd
+{{- end }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

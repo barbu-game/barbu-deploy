@@ -76,3 +76,6 @@ networkPolicy:
   monitoringNamespace: monitoring
   postgresOperatorNamespace: cnpg-system
   linkerd: true
+
+# Block ArgoCD sync until the Linkerd proxy-injector is ready, so pods are always meshed.
+waitForInjector: true

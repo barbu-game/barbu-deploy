@@ -21,6 +21,19 @@ spec:
           externalCA: true
           issuer:
             scheme: kubernetes.io/tls
+        # Webhook TLS is issued by cert-manager (charts/linkerd-certs), not self-signed by Linkerd —
+        # otherwise ArgoCD's `helm template` regenerates a mismatched cert each sync. externalSecret
+        # tells Linkerd the *-k8s-tls secrets already exist; injectCaFrom makes cert-manager's
+        # ca-injector keep each webhook's caBundle matched to its serving cert.
+        proxyInjector:
+          externalSecret: true
+          injectCaFrom: linkerd/linkerd-proxy-injector
+        profileValidator:
+          externalSecret: true
+          injectCaFrom: linkerd/linkerd-sp-validator
+        policyValidator:
+          externalSecret: true
+          injectCaFrom: linkerd/linkerd-policy-validator
   destination:
     server: https://kubernetes.default.svc
     namespace: linkerd

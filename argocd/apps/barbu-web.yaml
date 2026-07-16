@@ -3,6 +3,10 @@ kind: Application
 metadata:
   name: barbu-web
   namespace: argocd
+  annotations:
+    # After linkerd-control-plane (wave 2): the proxy-injector must be healthy before these pods are
+    # created, otherwise they start unmeshed (the injector webhook fails open) and need a restart.
+    argocd.argoproj.io/sync-wave: "3"
 spec:
   project: default
   source:
